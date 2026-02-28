@@ -175,9 +175,13 @@ export function querySources(): Array<{ id: string; publisher: string; title: st
 }
 
 export function querySocialMediaSources(): SocialMediaSource[] {
-  return getSeedData()
-    .social_media.filter((source) => isAllowedSocialSourceUrl(source.url))
-    .map((source) => ({ ...source }));
+  return getSeedData().social_media
+    .map((source) => ({
+      ...source,
+      url: source.url || source.source_url || "",
+      source_url: source.source_url || source.url
+    }))
+    .filter((source) => isAllowedSocialSourceUrl(source.url));
 }
 
 function localizeSource(source: { id: string; publisher: string; title: string; url: string; published_at: string }, lang: Language) {

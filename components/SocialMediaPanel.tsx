@@ -9,6 +9,8 @@ interface SocialMediaPanelProps {
 }
 
 export function SocialMediaPanel({ items, language }: SocialMediaPanelProps) {
+  const toSourceUrl = (source: SocialMediaSource): string | undefined => source.source_url || source.url;
+
   return (
     <section className="dense-block overflow-hidden">
       <header className="signal-line flex items-center gap-2 px-3 py-2 text-sm font-semibold">
@@ -27,22 +29,27 @@ export function SocialMediaPanel({ items, language }: SocialMediaPanelProps) {
           items.map((source) => (
             <li key={source.id} className="space-y-1 px-3 py-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
+                  <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
                   {localizeContent(source.platform, language)}
                 </span>
                 <span className="text-slate-600">{pick(language, "来自", "From")} {source.handle}</span>
                 <UnverifiedBadge status={source.verification_status} language={language} />
               </div>
               <p className="leading-6 text-slate-700">{localizeContent(source.title, language)}</p>
-              <a
-                className="inline-flex items-center gap-1 text-teal-700 underline"
-                href={source.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Link size={12} />
-                {pick(language, "来源", "Source")} · {pick(language, "发布时间", "Published")} {source.published_at}
-              </a>
+              {toSourceUrl(source) ? (
+                <a
+                  className="inline-flex items-center gap-1 text-teal-700 underline"
+                  href={toSourceUrl(source)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={pick(language, `打开原帖：${source.title}`, `Open original post: ${source.title}`)}
+                >
+                  <Link size={12} />
+                  {pick(language, "来源", "Source")} · {source.published_at.slice(0, 16)}Z
+                </a>
+              ) : (
+                <p className="text-xs text-amber-700">{pick(language, "暂未获取到原始链接", "Original link unavailable")}</p>
+              )}
             </li>
           ))
         )}
