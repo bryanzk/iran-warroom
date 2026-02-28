@@ -54,6 +54,7 @@ export interface SocialMediaSource {
   handle: string;
   title: string;
   url: string;
+  source_url?: string;
   published_at: string;
   verification_status: VerificationStatus;
 }
