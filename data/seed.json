@@ -1,0 +1,404 @@
+{
+  "meta": {
+    "updated_at": "2026-02-28T14:32:00Z",
+    "last_successful_snapshot": "2026-02-28T14:30:00Z",
+    "coverage_start": "2026-02-28T06:19:16Z",
+    "coverage_end": "2026-02-28T14:32:00Z",
+    "headline": "截至 2026-02-28 14:32 UTC，多家可信来源报告伊朗境内发生多点空袭与后续响应，航班与通信出现受限迹象，部分信息仍在核验中。"
+  },
+  "events": [
+    {
+      "id": "evt_tehran_0619_ap",
+      "timestamp": "2026-02-28T06:19:16Z",
+      "location": {
+        "lat": 35.6892,
+        "lng": 51.389,
+        "country": "Iran",
+        "admin_level_1": "Tehran Province",
+        "admin_level_2": "Tehran"
+      },
+      "category": "explosion",
+      "description": "可信媒体报道德黑兰出现爆炸与烟柱，地点与影响范围仍在持续核验。",
+      "source_url": "https://apnews.com/article/iran-us-explosion-tehran-c2f11247d8a66e36929266f2c557a54c",
+      "source_time": "2026-02-28T06:19:16Z",
+      "confidence": 0.86,
+      "verification_status": "verified"
+    },
+    {
+      "id": "evt_airspace_restriction_0730",
+      "timestamp": "2026-02-28T07:30:00Z",
+      "location": {
+        "lat": 35.6892,
+        "lng": 51.389,
+        "country": "Iran",
+        "admin_level_1": "Tehran Province",
+        "admin_level_2": "Tehran"
+      },
+      "category": "transport_disruption",
+      "description": "区域空域与航线出现临时受限，对伊朗进出港航班造成影响。",
+      "source_url": "https://www.reuters.com/world/middle-east/middle-east-airspace-clears-some-countries-reopen-others-close-amid-conflict-2026-02-28/",
+      "source_time": "2026-02-28T15:45:00Z",
+      "confidence": 0.82,
+      "verification_status": "verified"
+    },
+    {
+      "id": "evt_network_throttling_1020",
+      "timestamp": "2026-02-28T10:20:00Z",
+      "location": {
+        "lat": 35.6892,
+        "lng": 51.389,
+        "country": "Iran",
+        "admin_level_1": "Tehran Province",
+        "admin_level_2": "Tehran"
+      },
+      "category": "communication_disruption",
+      "description": "报道显示互联网访问速率下降，影响持续时间与覆盖范围仍在更新。",
+      "source_url": "https://www.reuters.com/world/middle-east/irans-internet-service-throttled-after-us-israeli-strikes-infrastructure-minister-says-2026-02-28/",
+      "source_time": "2026-02-28T17:20:00Z",
+      "confidence": 0.78,
+      "verification_status": "verified"
+    },
+    {
+      "id": "evt_casualty_conflict_1115",
+      "timestamp": "2026-02-28T11:15:00Z",
+      "location": {
+        "lat": 35.6892,
+        "lng": 51.389,
+        "country": "Iran",
+        "admin_level_1": "Tehran Province",
+        "admin_level_2": "Tehran"
+      },
+      "category": "other",
+      "description": "不同来源对同一时段伤亡数字存在差异，当前仅可并列呈现。",
+      "source_url": "https://www.reuters.com/world/middle-east/us-israeli-strikes-iran-kill-least-50-including-senior-commanders-iranian-media-2026-02-28/",
+      "source_time": "2026-02-28T18:15:00Z",
+      "confidence": 0.55,
+      "verification_status": "contested"
+    },
+    {
+      "id": "evt_tabriz_unverified_1200",
+      "timestamp": "2026-02-28T12:00:00Z",
+      "location": {
+        "lat": 38.0803,
+        "lng": 46.2919,
+        "country": "Iran",
+        "admin_level_1": "East Azerbaijan",
+        "admin_level_2": "Tabriz"
+      },
+      "category": "infrastructure_disruption",
+      "description": "社交平台出现关于城市局部断电的说法，尚无独立来源交叉验证。",
+      "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+      "source_time": "2026-02-28T12:00:00Z",
+      "confidence": 0.35,
+      "verification_status": "unverified"
+    }
+  ],
+  "infrastructure": [
+    {
+      "sector": "airport",
+      "status": "restricted",
+      "evidence": [
+        {
+          "source_url": "https://www.reuters.com/world/middle-east/middle-east-airspace-clears-some-countries-reopen-others-close-amid-conflict-2026-02-28/",
+          "source_time": "2026-02-28T15:45:00Z",
+          "title": "Regional airspace disruptions",
+          "note": "多家航司航线调整，影响伊朗相关空域。",
+          "verification_status": "verified"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    },
+    {
+      "sector": "port",
+      "status": "unknown",
+      "evidence": [
+        {
+          "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+          "source_time": "2026-02-28T14:12:58Z",
+          "title": "No consistent port service report",
+          "note": "公开来源缺少可核验港口运行状态。",
+          "verification_status": "unverified"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    },
+    {
+      "sector": "power",
+      "status": "unknown",
+      "evidence": [
+        {
+          "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+          "source_time": "2026-02-28T12:21:56Z",
+          "title": "Power impact remains unclear",
+          "note": "伊朗境内电力影响尚缺稳定交叉来源。",
+          "verification_status": "unverified"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    },
+    {
+      "sector": "communications",
+      "status": "restricted",
+      "evidence": [
+        {
+          "source_url": "https://www.reuters.com/world/middle-east/irans-internet-service-throttled-after-us-israeli-strikes-infrastructure-minister-says-2026-02-28/",
+          "source_time": "2026-02-28T17:20:00Z",
+          "title": "Internet service throttled",
+          "note": "访问速度下降与服务波动。",
+          "verification_status": "verified"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    },
+    {
+      "sector": "transport",
+      "status": "restricted",
+      "evidence": [
+        {
+          "source_url": "https://www.reuters.com/world/middle-east/middle-east-airspace-clears-some-countries-reopen-others-close-amid-conflict-2026-02-28/",
+          "source_time": "2026-02-28T15:45:00Z",
+          "title": "Air routes adjusted",
+          "note": "交通网络以空中运输受限为主。",
+          "verification_status": "verified"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    },
+    {
+      "sector": "financial",
+      "status": "unknown",
+      "evidence": [
+        {
+          "source_url": "https://www.reuters.com/world/middle-east/brent-oil-prices-rises-5-after-us-attacks-iranian-nuclear-sites-2026-02-28/",
+          "source_time": "2026-02-28T16:00:00Z",
+          "title": "Market volatility observed",
+          "note": "观察到市场波动，但伊朗本地金融服务运行状态证据不足。",
+          "verification_status": "contested"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    },
+    {
+      "sector": "education",
+      "status": "unknown",
+      "evidence": [
+        {
+          "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+          "source_time": "2026-02-28T11:58:01Z",
+          "title": "Education operations unclear",
+          "note": "暂无可核验全国性教育系统运行结论。",
+          "verification_status": "unverified"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    },
+    {
+      "sector": "healthcare",
+      "status": "unknown",
+      "evidence": [
+        {
+          "source_url": "https://www.ohchr.org/en/statements-and-speeches/2026/02/iran-israel-un-human-rights-chief-calls-restraint-return-diplomacy",
+          "source_time": "2026-02-28T12:00:09Z",
+          "title": "Civilian risk noted",
+          "note": "医疗承载与可达性仍需后续公开数据支持。",
+          "verification_status": "contested"
+        }
+      ],
+      "last_updated": "2026-02-28T14:32:00Z"
+    }
+  ],
+  "statements": [
+    {
+      "party": "Iran Foreign Ministry",
+      "timestamp": "2026-02-28T14:12:58Z",
+      "quote": "Iran has the right to defend itself under international law.",
+      "summary": "伊朗方面强调其自卫权并表示倾向通过政治方式解决冲突。",
+      "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026"
+    },
+    {
+      "party": "UK-France-Germany Joint Statement",
+      "timestamp": "2026-02-28T13:59:24Z",
+      "quote": "We call for resumption of US-Iran negotiations and restraint.",
+      "summary": "英法德呼吁恢复谈判并避免地区冲突扩大。",
+      "source_url": "https://apnews.com/article/iran-us-israel-attack-european-allies-reactions-b7c1071c7c07036ce41040863e38ed64"
+    },
+    {
+      "party": "UN High Commissioner for Human Rights",
+      "timestamp": "2026-02-28T12:00:09Z",
+      "quote": "Bombs and missiles are not the way to resolve differences.",
+      "summary": "联合国人权高专呼吁各方克制并重返外交轨道。",
+      "source_url": "https://www.ohchr.org/en/statements-and-speeches/2026/02/iran-israel-un-human-rights-chief-calls-restraint-return-diplomacy"
+    },
+    {
+      "party": "UK Prime Minister Office",
+      "timestamp": "2026-02-28T11:58:01Z",
+      "quote": "We do not want further escalation into a wider regional conflict.",
+      "summary": "英国首相办公室表态不希望冲突升级并强调谈判路径。",
+      "source_url": "https://www.gov.uk/government/news/pm-statement-at-home-after-strikes-on-iran-28-february-2026"
+    }
+  ],
+  "factchecks": [
+    {
+      "claim": "同一时段伤亡数字是否一致",
+      "evidence_strength": "medium",
+      "sources": [
+        {
+          "label": "Reuters report A",
+          "value": "至少50",
+          "source_url": "https://www.reuters.com/world/middle-east/us-israeli-strikes-iran-kill-least-50-including-senior-commanders-iranian-media-2026-02-28/",
+          "source_time": "2026-02-28T18:15:00Z"
+        },
+        {
+          "label": "Other contemporaneous reports",
+          "value": "至少78【未验证】",
+          "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+          "source_time": "2026-02-28T14:24:08Z"
+        }
+      ],
+      "gaps": [
+        "统计口径是否包含后续救援阶段不清晰",
+        "部分数字来自单一渠道，缺少独立二次确认"
+      ],
+      "next_verification_steps": [
+        "等待官方或国际组织发布统一时间窗统计",
+        "对比同一地点同一时间戳的多源记录"
+      ]
+    }
+  ],
+  "media": [
+    {
+      "id": "media_ap_tehran_smoke",
+      "title": "德黑兰天际线烟柱画面",
+      "type": "video",
+      "thumbnail_url": "https://cdn.jwplayer.com/v2/media/733bKaCb/thumbnails/O2lUQnSf.jpg",
+      "content_url": "https://apnews.com/video/smoke-seen-rising-from-area-of-southern-tehran-following-israeli-attack-df24becb27544e599368acc8df5a7566",
+      "source_url": "https://apnews.com/article/iran-us-explosion-tehran-c2f11247d8a66e36929266f2c557a54c",
+      "source_time": "2026-02-28T06:24:11Z",
+      "verification_status": "verified",
+      "content_warning": "含爆炸后烟柱与紧急场景"
+    },
+    {
+      "id": "media_unverified_clip",
+      "title": "社交平台流传的城市停电影像",
+      "type": "video",
+      "thumbnail_url": "https://images.unsplash.com/photo-1573164713712-03790a178651?auto=format&fit=crop&w=900&q=60",
+      "content_url": "https://example.invalid/unverified",
+      "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+      "source_time": "2026-02-28T12:00:00Z",
+      "verification_status": "unverified",
+      "content_warning": "来源待独立核验"
+    }
+  ],
+  "faq": [
+    {
+      "question": "哪些地区受影响？",
+      "answer": "当前公开信息集中于德黑兰及部分省份的事件报告，范围仍在更新。"
+    },
+    {
+      "question": "航班与空域目前如何？",
+      "answer": "多家来源报告地区空域曾受限并出现航班调整，状态可能快速变化。"
+    },
+    {
+      "question": "通信是否中断？",
+      "answer": "已有来源提及互联网限速或波动，持续时间与覆盖范围尚待更多核验。"
+    },
+    {
+      "question": "为什么不同来源数据不一致？",
+      "answer": "发布时间、统计口径和覆盖地理范围不同，会导致数值差异。"
+    },
+    {
+      "question": "页面如何判定未验证？",
+      "answer": "当信息缺少独立来源交叉确认或仅有单一渠道时，标记为【未验证】。"
+    },
+    {
+      "question": "如何查看原始来源？",
+      "answer": "点击每条卡片或时间线节点的“查看来源”即可访问原文链接和发布时间。"
+    }
+  ],
+  "regional_impacts": [
+    {
+      "country": "Jordan",
+      "summary": "有报道提及拦截导弹与坠落物通报。",
+      "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+      "source_time": "2026-02-28T12:30:25Z"
+    },
+    {
+      "country": "Iraq",
+      "summary": "有报道提及导弹与无人机拦截及电力影响。",
+      "source_url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+      "source_time": "2026-02-28T14:18:21Z"
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "publisher": "AP",
+      "title": "US and Israel launch a major attack on Iran",
+      "url": "https://apnews.com/article/iran-us-explosion-tehran-c2f11247d8a66e36929266f2c557a54c",
+      "published_at": "2026-02-28T06:19:16Z"
+    },
+    {
+      "id": "S2",
+      "publisher": "AP",
+      "title": "Live updates",
+      "url": "https://apnews.com/live/live-updates-israel-iran-february-28-2026",
+      "published_at": "2026-02-28T07:02:34Z"
+    },
+    {
+      "id": "S3",
+      "publisher": "Reuters",
+      "title": "Middle East airspace disruptions",
+      "url": "https://www.reuters.com/world/middle-east/middle-east-airspace-clears-some-countries-reopen-others-close-amid-conflict-2026-02-28/",
+      "published_at": "2026-02-28T15:45:00Z"
+    },
+    {
+      "id": "S4",
+      "publisher": "Reuters",
+      "title": "Iran strikes report",
+      "url": "https://www.reuters.com/world/middle-east/us-israeli-strikes-iran-kill-least-50-including-senior-commanders-iranian-media-2026-02-28/",
+      "published_at": "2026-02-28T18:15:00Z"
+    },
+    {
+      "id": "S5",
+      "publisher": "Reuters",
+      "title": "Oil price movement",
+      "url": "https://www.reuters.com/world/middle-east/brent-oil-prices-rises-5-after-us-attacks-iranian-nuclear-sites-2026-02-28/",
+      "published_at": "2026-02-28T16:00:00Z"
+    },
+    {
+      "id": "S6",
+      "publisher": "Reuters",
+      "title": "Internet service throttled",
+      "url": "https://www.reuters.com/world/middle-east/irans-internet-service-throttled-after-us-israeli-strikes-infrastructure-minister-says-2026-02-28/",
+      "published_at": "2026-02-28T17:20:00Z"
+    },
+    {
+      "id": "S7",
+      "publisher": "GOV.UK",
+      "title": "PM statement",
+      "url": "https://www.gov.uk/government/news/pm-statement-at-home-after-strikes-on-iran-28-february-2026",
+      "published_at": "2026-02-28T11:58:01Z"
+    },
+    {
+      "id": "S8",
+      "publisher": "OHCHR",
+      "title": "Call for restraint",
+      "url": "https://www.ohchr.org/en/statements-and-speeches/2026/02/iran-israel-un-human-rights-chief-calls-restraint-return-diplomacy",
+      "published_at": "2026-02-28T12:00:09Z"
+    },
+    {
+      "id": "S9",
+      "publisher": "UN Press",
+      "title": "Security Council meeting",
+      "url": "https://press.un.org/en/2025/sc16087.doc.htm",
+      "published_at": "2025-06-13T00:00:00Z"
+    },
+    {
+      "id": "S10",
+      "publisher": "IAEA",
+      "title": "DG statement to UNSC",
+      "url": "https://www.iaea.org/newscenter/statements/iaea-director-general-grossis-statement-to-unsc-on-situation-in-iran-22-june-2025",
+      "published_at": "2025-06-22T17:30:00Z"
+    }
+  ]
+}

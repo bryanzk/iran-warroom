@@ -1,0 +1,10 @@
+{
+  "allowed_domains": [
+    "apnews.com",
+    "reuters.com",
+    "gov.uk",
+    "ohchr.org",
+    "press.un.org",
+    "iaea.org"
+  ]
+}

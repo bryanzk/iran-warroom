@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/statement.schema.json",
+  "title": "Statement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["party", "timestamp", "quote", "summary", "source_url"],
+  "properties": {
+    "party": { "type": "string", "minLength": 2, "maxLength": 80 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "quote": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^\\S+(\\s+\\S+){0,24}$",
+      "description": "最多25词"
+    },
+    "summary": { "type": "string", "maxLength": 400 },
+    "source_url": { "type": "string", "format": "uri" }
+  }
+}
