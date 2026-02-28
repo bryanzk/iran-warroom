@@ -141,15 +141,15 @@ class LiveFeedService {
         }
 
         this.sourceVersions.set(source.url, probe.version);
-        const sourceLabel = source.label ? ` (${source.label})` : "";
         const platformLabel = source.platform ? ` [${source.platform}]` : "";
+        const sourceLabel = source.label ? ` — ${source.label}` : "";
         this.pushMessage({
-          source_id: `${source.id}${sourceLabel ? platformLabel : ""}`,
+          source_id: `${source.id}${platformLabel}`,
           source_url: source.url,
           type: "source_update",
           verification_status: "verified",
-          text_zh: `来源 ${source.id}${platformLabel}${sourceLabel ? sourceLabel : ""} 检测到更新（版本：${probe.version}）。`,
-          text_en: `Source ${source.id}${platformLabel}${sourceLabel ? sourceLabel : ""} reported an update (version: ${probe.version}).`
+          text_zh: `来源 ${source.id}${platformLabel}${sourceLabel} 检测到内容更新。`,
+          text_en: `${source.id}${platformLabel}${sourceLabel} published new content.`
         });
       })
     );
