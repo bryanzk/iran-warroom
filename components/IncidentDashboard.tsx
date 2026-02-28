@@ -178,7 +178,13 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 </section>
 
                 <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                  <MapPins events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} language={language} />
+                  <MapPins
+                    events={events}
+                    regionalImpacts={data.regional_impacts}
+                    selectedEventId={selectedEvent?.id}
+                    onSelect={setSelectedEventId}
+                    language={language}
+                  />
                   <LocationList events={events} language={language} />
                 </section>
 
