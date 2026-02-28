@@ -150,100 +150,108 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
             />
           </div>
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-[1.62fr_1fr]">
-            <section className="space-y-4 xl:pr-1">
-              <section className="dense-block p-3">
-                <div className="mb-2 grid gap-2 md:grid-cols-3">
-                  <article className="signal-line pb-2 md:pb-0 md:pr-2">
-                    <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
-                      <Broadcast size={13} /> {pick(language, "最新来源时间", "Latest Source Time")}
-                    </p>
-                    <p className="font-mono text-xs text-slate-700">{metrics.latestSourceTime || "N/A"}</p>
-                  </article>
-                  <article className="signal-line pb-2 md:pb-0 md:pr-2">
-                    <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
-                      <MapPin size={13} /> {pick(language, "覆盖地点", "Covered Locations")}
-                    </p>
-                    <p className="font-mono text-xs text-slate-700">{new Set(events.map((item) => item.location.admin_level_2)).size}</p>
-                  </article>
-                  <article>
-                    <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
-                      <ClockCountdown size={13} /> {pick(language, "选中事件", "Selected Event")}
-                    </p>
-                    <p className="truncate text-xs text-slate-700">{selectedEvent ? localizeContent(selectedEvent.description, language) : "N/A"}</p>
-                  </article>
-                </div>
+          <div className="mt-4 space-y-4">
+            <section className="grid gap-4 xl:grid-cols-[1.62fr_1fr]">
+              <section className="space-y-4 xl:pr-1">
+                <section className="dense-block p-3">
+                  <div className="mb-2 grid gap-2 md:grid-cols-3">
+                    <article className="signal-line pb-2 md:pb-0 md:pr-2">
+                      <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
+                        <Broadcast size={13} /> {pick(language, "最新来源时间", "Latest Source Time")}
+                      </p>
+                      <p className="font-mono text-xs text-slate-700">{metrics.latestSourceTime || "N/A"}</p>
+                    </article>
+                    <article className="signal-line pb-2 md:pb-0 md:pr-2">
+                      <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
+                        <MapPin size={13} /> {pick(language, "覆盖地点", "Covered Locations")}
+                      </p>
+                      <p className="font-mono text-xs text-slate-700">{new Set(events.map((item) => item.location.admin_level_2)).size}</p>
+                    </article>
+                    <article>
+                      <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
+                        <ClockCountdown size={13} /> {pick(language, "选中事件", "Selected Event")}
+                      </p>
+                      <p className="truncate text-xs text-slate-700">{selectedEvent ? localizeContent(selectedEvent.description, language) : "N/A"}</p>
+                    </article>
+                  </div>
+                </section>
+
+                <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                  <MapPins events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} language={language} />
+                  <LocationList events={events} language={language} />
+                </section>
+
+                <section className="grid gap-4 2xl:grid-cols-[1.25fr_1fr]">
+                  <Timeline events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} language={language} />
+                  <StatusCards
+                    items={data.infrastructure}
+                    language={language}
+                    onOpenSources={(item) =>
+                      setDrawer({
+                        open: true,
+                        title: localizeSector(item.sector, language),
+                        sources: item.evidence
+                      })
+                    }
+                  />
+                </section>
               </section>
 
-              <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <MapPins events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} language={language} />
-                <LocationList events={events} language={language} />
-              </section>
+              <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+                <LiveUpdatePanel language={language} />
 
-              <section className="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
-                <Timeline events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} language={language} />
-                <StatusCards
-                  items={data.infrastructure}
-                  language={language}
-                  onOpenSources={(item) =>
-                    setDrawer({
-                      open: true,
-                      title: localizeSector(item.sector, language),
-                      sources: item.evidence
-                    })
-                  }
-                />
-              </section>
+                <section className="dense-block overflow-hidden">
+                  <header className="signal-line flex items-center gap-2 px-3 py-2 text-sm font-semibold">
+                    <WarningCircle size={16} weight="duotone" className="text-teal-700" />
+                    {pick(language, "区域外溢", "Regional Spillover")}
+                  </header>
+                  <ul className="divide-y text-xs">
+                    {data.regional_impacts.map((impact) => (
+                      <li key={`${impact.country}-${impact.source_time}`} className="space-y-1 px-3 py-2">
+                        <p className="font-semibold text-slate-700">{impact.country}</p>
+                        <p className="leading-5 text-slate-600">{localizeContent(impact.summary, language)}</p>
+                        <a className="text-teal-700 underline" href={impact.source_url} target="_blank" rel="noreferrer">
+                          {pick(language, "来源", "Source")} · {impact.source_time}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
 
-              <ConflictNumbersPanel item={data.factchecks[0]} language={language} />
-              <StatementCompare statements={data.statements} language={language} />
-              <FactCheckPanel items={data.factchecks} language={language} />
-              <MediaGallery items={data.media} language={language} />
-              <FAQ items={data.faq} language={language} />
+                <section className="dense-block overflow-hidden">
+                  <header className="signal-line flex items-center gap-2 px-3 py-2 text-sm font-semibold">
+                    <ShieldCheck size={16} weight="duotone" className="text-teal-700" />
+                    {pick(language, "可信来源监控", "Trusted Source Monitor")}
+                  </header>
+                  <ul className="max-h-[20rem] divide-y overflow-y-auto text-xs">
+                    {data.sources.map((source) => (
+                      <li key={source.id} className="space-y-1 px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-slate-700">{source.id}</span>
+                          <span className="font-mono text-[10px] text-slate-500">{source.published_at.slice(0, 16)}Z</span>
+                        </div>
+                        <p className="text-slate-600">{source.title}</p>
+                        <a className="text-teal-700 underline" href={source.url} target="_blank" rel="noreferrer">
+                          {pick(language, "打开来源", "Open Source")}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </aside>
             </section>
 
-            <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-              <LiveUpdatePanel language={language} />
-
-              <section className="dense-block overflow-hidden">
-                <header className="signal-line flex items-center gap-2 px-3 py-2 text-sm font-semibold">
-                  <WarningCircle size={16} weight="duotone" className="text-teal-700" />
-                  {pick(language, "区域外溢", "Regional Spillover")}
-                </header>
-                <ul className="divide-y text-xs">
-                  {data.regional_impacts.map((impact) => (
-                    <li key={`${impact.country}-${impact.source_time}`} className="space-y-1 px-3 py-2">
-                      <p className="font-semibold text-slate-700">{impact.country}</p>
-                      <p className="leading-5 text-slate-600">{localizeContent(impact.summary, language)}</p>
-                      <a className="text-teal-700 underline" href={impact.source_url} target="_blank" rel="noreferrer">
-                        {pick(language, "来源", "Source")} · {impact.source_time}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section className="dense-block overflow-hidden">
-                <header className="signal-line flex items-center gap-2 px-3 py-2 text-sm font-semibold">
-                  <ShieldCheck size={16} weight="duotone" className="text-teal-700" />
-                  {pick(language, "可信来源监控", "Trusted Source Monitor")}
-                </header>
-                <ul className="max-h-[20rem] divide-y overflow-y-auto text-xs">
-                  {data.sources.map((source) => (
-                    <li key={source.id} className="space-y-1 px-3 py-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-slate-700">{source.id}</span>
-                        <span className="font-mono text-[10px] text-slate-500">{source.published_at.slice(0, 16)}Z</span>
-                      </div>
-                      <p className="text-slate-600">{source.title}</p>
-                      <a className="text-teal-700 underline" href={source.url} target="_blank" rel="noreferrer">
-                        {pick(language, "打开来源", "Open Source")}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </aside>
+            <section className="grid gap-4 2xl:grid-cols-[1.2fr_1fr]">
+              <div className="space-y-4">
+                <ConflictNumbersPanel item={data.factchecks[0]} language={language} />
+                <StatementCompare statements={data.statements} language={language} />
+                <FactCheckPanel items={data.factchecks} language={language} />
+              </div>
+              <div className="space-y-4">
+                <MediaGallery items={data.media} language={language} />
+                <FAQ items={data.faq} language={language} />
+              </div>
+            </section>
           </div>
         </div>
       </div>
