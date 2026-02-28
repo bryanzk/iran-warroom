@@ -10,7 +10,7 @@ interface SourceDrawerProps {
   language?: Language;
 }
 
-export function SourceDrawer({ open, title, sources, onClose, language = "zh" }: SourceDrawerProps) {
+export function SourceDrawer({ open, title, sources, onClose, language = "en" }: SourceDrawerProps) {
   return (
     <aside
       className={`fixed right-0 top-0 z-40 h-full w-full max-w-md transform border-l border-slate-200 bg-white p-4 shadow-xl transition ${

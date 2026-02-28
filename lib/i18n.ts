@@ -7,7 +7,7 @@ export function pick(lang: Language, zh: string, en: string): string {
 }
 
 export function parseLanguage(raw: string | null | undefined): Language {
-  return raw === "en" ? "en" : "zh";
+  return raw === "zh" ? "zh" : "en";
 }
 
 const CONTENT_TRANSLATIONS: Record<string, string> = {

@@ -16,7 +16,7 @@ const LABELS = {
   third: { zh: "第三方政府", en: "Third-party Governments" }
 };
 
-export function StatementCompare({ statements, language = "zh" }: { statements: Statement[]; language?: Language }) {
+export function StatementCompare({ statements, language = "en" }: { statements: Statement[]; language?: Language }) {
   const grouped = {
     iran: [] as Statement[],
     actors: [] as Statement[],

@@ -1,7 +1,7 @@
 import type { Event } from "@/lib/types";
 import { pick, type Language } from "@/lib/i18n";
 
-export function LocationList({ events, language = "zh" }: { events: Event[]; language?: Language }) {
+export function LocationList({ events, language = "en" }: { events: Event[]; language?: Language }) {
   const grouped = Array.from(
     events.reduce((map, event) => {
       const key = `${event.location.admin_level_1} / ${event.location.admin_level_2}`;

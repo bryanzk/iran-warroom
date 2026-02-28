@@ -8,7 +8,7 @@ import { getSeedData } from "@/lib/data";
 describe("ui safety", () => {
   it("renders unverified badge", () => {
     render(<UnverifiedBadge status="unverified" />);
-    expect(screen.getByText("【未验证】")).toBeInTheDocument();
+    expect(screen.getByText("【Unverified】")).toBeInTheDocument();
   });
 
   it("blocks media interaction before warning confirmation", async () => {
@@ -17,10 +17,10 @@ describe("ui safety", () => {
 
     render(<MediaGallery items={media} />);
 
-    expect(screen.getByText("内容警示")).toBeInTheDocument();
+    expect(screen.getByText("Content Warning")).toBeInTheDocument();
     expect(screen.queryByText("手动播放 / 打开原视频")).not.toBeInTheDocument();
 
-    await user.click(screen.getByText("我已了解，继续查看"));
-    expect(screen.getAllByText("手动播放 / 打开原视频").length).toBeGreaterThan(0);
+    await user.click(screen.getByText("I Understand, Continue"));
+    expect(screen.getAllByText("Play Manually / Open Original").length).toBeGreaterThan(0);
   });
 });

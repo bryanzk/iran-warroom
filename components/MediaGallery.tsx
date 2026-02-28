@@ -5,7 +5,7 @@ import { ContentWarningModal } from "@/components/ContentWarningModal";
 import { enforceSafeMediaTitle } from "@/lib/safety";
 import { localizeContent, pick, type Language } from "@/lib/i18n";
 
-export function MediaGallery({ items, language = "zh" }: { items: MediaItem[]; language?: Language }) {
+export function MediaGallery({ items, language = "en" }: { items: MediaItem[]; language?: Language }) {
   const [warningAccepted, setWarningAccepted] = useState(false);
 
   const safeItems = useMemo(

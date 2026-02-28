@@ -29,7 +29,7 @@ function averageConfidence(events: Event[]): string {
 }
 
 export function IncidentDashboard({ data }: IncidentDashboardProps) {
-  const [language, setLanguage] = useState<Language>("zh");
+  const [language, setLanguage] = useState<Language>("en");
   const [darkMode, setDarkMode] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>(data.events[0]?.id);
   const [drawer, setDrawer] = useState<{ open: boolean; title: string; sources: InfrastructureStatus["evidence"] }>({

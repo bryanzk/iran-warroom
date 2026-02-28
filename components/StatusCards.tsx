@@ -23,7 +23,7 @@ function formatUtcCompact(timestamp: string): string {
 export function StatusCards({
   items,
   onOpenSources,
-  language = "zh"
+  language = "en"
 }: {
   items: InfrastructureStatus[];
   onOpenSources: (item: InfrastructureStatus) => void;

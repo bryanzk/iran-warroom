@@ -21,7 +21,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <body className={`${outfit.variable} ${jetbrainsMono.variable}`}>{children}</body>
     </html>
   );

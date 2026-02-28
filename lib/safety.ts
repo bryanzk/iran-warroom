@@ -22,7 +22,7 @@ export function hasGraphicRisk(text: string): boolean {
   return BANNED_VISUAL_KEYWORDS.some((keyword) => normalized.includes(keyword));
 }
 
-export function enforceSafeMediaTitle(title: string, language: "zh" | "en" = "zh"): string {
+export function enforceSafeMediaTitle(title: string, language: "zh" | "en" = "en"): string {
   if (hasGraphicRisk(title)) {
     return language === "zh"
       ? "内容已过滤：标题不符合公开展示规则"

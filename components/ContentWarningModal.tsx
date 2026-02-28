@@ -6,7 +6,7 @@ interface ContentWarningModalProps {
   language?: Language;
 }
 
-export function ContentWarningModal({ open, onConfirm, language = "zh" }: ContentWarningModalProps) {
+export function ContentWarningModal({ open, onConfirm, language = "en" }: ContentWarningModalProps) {
   if (!open) return null;
 
   return (

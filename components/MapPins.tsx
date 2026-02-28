@@ -31,7 +31,7 @@ const OSM_STYLE: StyleSpecification = {
   ]
 };
 
-export function MapPins({ events, selectedEventId, onSelect, language = "zh" }: MapPinsProps) {
+export function MapPins({ events, selectedEventId, onSelect, language = "en" }: MapPinsProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const maplibreRef = useRef<typeof import("maplibre-gl") | null>(null);

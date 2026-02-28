@@ -15,7 +15,7 @@ const LABELS: Record<Language, Record<VerificationStatus, string>> = {
   }
 };
 
-export function UnverifiedBadge({ status, language = "zh" }: { status: VerificationStatus; language?: Language }) {
+export function UnverifiedBadge({ status, language = "en" }: { status: VerificationStatus; language?: Language }) {
   const classes = classNames(
     "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
     {

@@ -2,7 +2,7 @@ import { localizeContent, pick, type Language } from "@/lib/i18n";
 
 export function FAQ({
   items,
-  language = "zh"
+  language = "en"
 }: {
   items: Array<{ question: string; answer: string }>;
   language?: Language;

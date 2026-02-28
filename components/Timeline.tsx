@@ -9,7 +9,7 @@ interface TimelineProps {
   language?: Language;
 }
 
-export function Timeline({ events, selectedEventId, onSelect, language = "zh" }: TimelineProps) {
+export function Timeline({ events, selectedEventId, onSelect, language = "en" }: TimelineProps) {
   return (
     <section className="card p-4">
       <div className="mb-3 flex items-center justify-between">

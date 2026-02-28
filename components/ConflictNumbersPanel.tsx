@@ -1,7 +1,7 @@
 import type { FactCheckItem } from "@/lib/types";
 import { localizeContent, pick, type Language } from "@/lib/i18n";
 
-export function ConflictNumbersPanel({ item, language = "zh" }: { item?: FactCheckItem; language?: Language }) {
+export function ConflictNumbersPanel({ item, language = "en" }: { item?: FactCheckItem; language?: Language }) {
   if (!item) return null;
 
   return (

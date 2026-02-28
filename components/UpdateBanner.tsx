@@ -15,7 +15,7 @@ export function UpdateBanner({
   updatedAtUtc,
   updatedAtLocal,
   coverage,
-  language = "zh"
+  language = "en"
 }: UpdateBannerProps) {
   return (
     <section className="card sticky top-3 z-30 p-4 shadow-sm backdrop-blur">

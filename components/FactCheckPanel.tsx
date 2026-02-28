@@ -7,7 +7,7 @@ const STRENGTH_CLASS = {
   weak: "bg-rose-100 text-rose-700"
 };
 
-export function FactCheckPanel({ items, language = "zh" }: { items: FactCheckItem[]; language?: Language }) {
+export function FactCheckPanel({ items, language = "en" }: { items: FactCheckItem[]; language?: Language }) {
   return (
     <section className="card p-4">
       <h2 className="text-lg font-semibold">{pick(language, "事实核查区", "Fact-check Section")}</h2>

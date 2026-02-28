@@ -10,11 +10,11 @@ import {
 import { parseLanguage } from "@/lib/i18n";
 
 describe("i18n query layer", () => {
-  it("parses language param with zh default", () => {
+  it("parses language param with en default", () => {
     expect(parseLanguage("en")).toBe("en");
     expect(parseLanguage("zh")).toBe("zh");
-    expect(parseLanguage(null)).toBe("zh");
-    expect(parseLanguage("fr")).toBe("zh");
+    expect(parseLanguage(null)).toBe("en");
+    expect(parseLanguage("fr")).toBe("en");
   });
 
   it("localizes event descriptions in english", () => {
