@@ -95,17 +95,21 @@ pre {
 
 .map-root {
   position: relative;
-  height: 20rem;
+  height: 30rem;
   width: 100%;
   overflow: hidden;
   border-radius: 0.85rem;
   border: 1px solid var(--border);
-  background: #cfd7e3;
+  background: #d4dce4;
 }
 
 .map-canvas {
   height: 100%;
   width: 100%;
+}
+
+.map-canvas canvas {
+  filter: grayscale(1) contrast(0.92) brightness(1.04);
 }
 
 .map-overlay {
@@ -126,22 +130,110 @@ pre {
   padding: 1rem;
 }
 
-.map-pin {
-  border: 1px solid #334155;
-  border-radius: 9999px;
-  padding: 0.25rem 0.5rem;
-  font-size: 11px;
-  line-height: 1.1;
-  color: #0f172a;
-  background: #f8fafc;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15);
+.map-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--panel) 90%, #ffffff 10%);
+}
+
+.map-toggle-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.38rem 0.68rem;
+  font-size: 0.72rem;
+  line-height: 1;
   cursor: pointer;
 }
 
-.map-pin-active {
-  border-color: var(--accent);
-  color: #ffffff;
-  background: var(--accent);
+.map-toggle-btn-active {
+  background: color-mix(in srgb, var(--accent) 13%, #ffffff 87%);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.map-legend {
+  position: absolute;
+  left: 0.62rem;
+  top: 0.62rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, #ffffff 18%);
+  border-radius: 999px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.68rem;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.88);
+  color: #334155;
+  z-index: 3;
+}
+
+.map-legend-dot {
+  width: 0.44rem;
+  height: 0.44rem;
+  background: #d61f1f;
+}
+
+.map-marker {
+  display: grid;
+  grid-template-columns: auto;
+  align-items: center;
+  justify-items: start;
+  gap: 0.12rem;
+  transform: translateY(-0.1rem);
+}
+
+.map-dot {
+  width: 0.52rem;
+  height: 0.52rem;
+  border: 1px solid #941010;
+  background: #d31e1e;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+
+.map-label {
+  font-size: 0.78rem;
+  line-height: 1.02;
+  color: #1f2937;
+  font-weight: 550;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.map-note {
+  font-size: 0.62rem;
+  line-height: 1;
+  color: #475569;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.map-marker-active .map-label {
+  color: #0b4f4a;
+}
+
+@media (max-width: 1024px) {
+  .map-root {
+    height: 23rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .map-root {
+    height: 19rem;
+  }
+
+  .map-label {
+    font-size: 0.7rem;
+  }
+
+  .map-note {
+    display: none;
+  }
 }
 
 .realtime-ticker-mask {
