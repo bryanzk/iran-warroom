@@ -14,7 +14,7 @@
   --accent-soft: rgba(15, 118, 110, 0.12);
 }
 
-.dark {
+html.dark {
   --bg: #09141a;
   --fg: #e6eff3;
   --panel: #11232c;
@@ -29,7 +29,7 @@ body {
     radial-gradient(circle at 0% 0%, #dce9ee 0%, transparent 45%),
     linear-gradient(180deg, #f4f8fa 0%, var(--bg) 60%);
   color: var(--fg);
-  min-height: 100vh;
+  min-height: 100dvh;
   font-family: var(--font-ui), "Noto Sans SC", sans-serif;
 }
 
@@ -39,7 +39,7 @@ pre {
   font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-.dark body {
+html.dark body {
   background:
     radial-gradient(circle at 0% 0%, #15323f 0%, transparent 44%),
     linear-gradient(180deg, #0f1e27 0%, var(--bg) 60%);
@@ -95,7 +95,7 @@ pre {
 
 .map-root {
   position: relative;
-  height: 30rem;
+  height: clamp(28rem, 40vh, 40rem);
   width: 100%;
   overflow: hidden;
   border-radius: 0.85rem;
@@ -218,7 +218,7 @@ pre {
 
 @media (max-width: 1024px) {
   .map-root {
-    height: 23rem;
+    height: clamp(20rem, 35vh, 26rem);
   }
 }
 

@@ -1,3 +1,4 @@
+import { MapPin } from "@phosphor-icons/react";
 import type { Event } from "@/lib/types";
 import { pick, type Language } from "@/lib/i18n";
 
@@ -13,16 +14,24 @@ export function LocationList({ events, language = "en" }: { events: Event[]; lan
   return (
     <section className="card p-4">
       <h3 className="text-base font-semibold">{pick(language, "地点列表", "Location List")}</h3>
-      <ul className="mt-2 space-y-1 text-sm">
-        {grouped.map(([name, count]) => (
-          <li key={name} className="flex items-center justify-between rounded bg-slate-50 px-2 py-1">
-            <span>{name}</span>
-            <span>
-              {count} {pick(language, "条", "items")}
-            </span>
-          </li>
-        ))}
-      </ul>
+
+      {grouped.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-8 text-slate-400">
+          <MapPin size={24} weight="thin" />
+          <p className="text-xs">{pick(language, "无匹配地点", "No matching locations")}</p>
+        </div>
+      ) : (
+        <ul className="mt-2 space-y-1 text-sm">
+          {grouped.map(([name, count]) => (
+            <li key={name} className="flex items-center justify-between rounded bg-slate-50 px-2 py-1">
+              <span>{name}</span>
+              <span>
+                {count} {pick(language, "条", "items")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

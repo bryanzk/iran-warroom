@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Broadcast, ClockCountdown, MapPin, Pulse, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
 import { FilterBar } from "@/components/FilterBar";
 import { RealtimeTicker } from "@/components/RealtimeTicker";
@@ -39,13 +40,19 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
     sources: []
   });
 
-  const [filters, setFilters] = useState({
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
+
+  const defaultFilters = {
     region: "",
     category: "all" as "all" | Event["category"],
     verificationStatus: "all" as "all" | Event["verification_status"],
     minConfidence: 0,
     keyword: ""
-  });
+  };
+  const [filters, setFilters] = useState(defaultFilters);
+  const clearFilters = () => setFilters(defaultFilters);
 
   const events = useMemo(() => {
     return data.events.filter((event) => {
@@ -85,9 +92,33 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
     };
   }, [events]);
 
+  const containerVariants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.07 } }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 18 },
+    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 20 } }
+  };
+
   return (
-    <main className={darkMode ? "dark" : ""}>
+    <main>
       <div className="mx-auto max-w-[1400px] px-4 py-4 md:py-6">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-3 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+        >
+          <span className="font-semibold tracking-wide">
+            {pick(language, "开源情报追踪 · 伊朗冲突态势", "Open-Source Intelligence · Iran Conflict Watch")}
+          </span>
+          <span className="opacity-40">|</span>
+          <span className="opacity-75">
+            {pick(language, "实时聚合公开来源数据，不代表任何官方立场", "Aggregates public sources in real time. Does not represent any official position.")}
+          </span>
+        </motion.div>
+
         <div className="cockpit-shell overflow-hidden p-3 md:p-4">
           <header className="signal-line pb-4">
             <div className="grid gap-4 md:grid-cols-[1.45fr_1fr]">
@@ -100,7 +131,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                   <span className="font-mono">2026-02-28 14:32 UTC</span>
                 </div>
 
-                <h1 className="text-4xl leading-none tracking-tighter md:text-5xl">
+                <h1 className="text-4xl font-extrabold leading-none tracking-tighter md:text-5xl">
                   {pick(language, "伊朗空袭后态势总览", "Post-Strike Situation Overview: Iran")}
                 </h1>
 
@@ -151,8 +182,13 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
             />
           </div>
 
-          <div className="mt-4 space-y-4">
-            <section className="grid gap-4 xl:grid-cols-[1.62fr_1fr]">
+          <motion.div
+            className="mt-4 space-y-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+          >
+            <motion.section variants={itemVariants} className="grid gap-4 xl:grid-cols-[1.62fr_1fr]">
               <section className="space-y-4 xl:pr-1">
                 <section className="dense-block p-3">
                   <div className="mb-2 grid gap-2 md:grid-cols-3">
@@ -189,7 +225,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 </section>
 
                 <section className="grid gap-4 2xl:grid-cols-[1.25fr_1fr]">
-                  <Timeline events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} language={language} />
+                  <Timeline events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} onClearFilters={clearFilters} language={language} />
                   <StatusCards
                     items={data.infrastructure}
                     language={language}
@@ -248,9 +284,9 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
 
                 <SocialMediaPanel items={data.social_media} language={language} />
               </aside>
-            </section>
+            </motion.section>
 
-            <section className="grid gap-4 2xl:grid-cols-[1.2fr_1fr]">
+            <motion.section variants={itemVariants} className="grid gap-4 2xl:grid-cols-[1.2fr_1fr]">
               <div className="space-y-4">
                 <ConflictNumbersPanel item={data.factchecks[0]} language={language} />
                 <StatementCompare statements={data.statements} language={language} />
@@ -260,8 +296,8 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 <MediaGallery items={data.media} language={language} />
                 <FAQ items={data.faq} language={language} />
               </div>
-            </section>
-          </div>
+            </motion.section>
+          </motion.div>
         </div>
       </div>
 
