@@ -428,6 +428,33 @@
       "url": "https://twitter.com/IranGov_MFA/status/1912345678901234570",
       "published_at": "2026-02-28T08:02:00Z",
       "verification_status": "verified"
+    },
+    {
+      "id": "SM4",
+      "platform": "X",
+      "handle": "@IRIFAIRSTRIKE",
+      "title": "伊朗官方社媒继续发布各省搜救与安全协助说明。",
+      "url": "https://x.com/IRIFAIRSTRIKE/status/1912345678901234600",
+      "published_at": "2026-02-28T08:21:00Z",
+      "verification_status": "verified"
+    },
+    {
+      "id": "SM5",
+      "platform": "X",
+      "handle": "@StateDepartment",
+      "title": "美国国务院发布对事态升级的立场更新。",
+      "url": "https://x.com/StateDepartment/status/1912345678901234601",
+      "published_at": "2026-02-28T09:10:00Z",
+      "verification_status": "unverified"
+    },
+    {
+      "id": "SM6",
+      "platform": "X",
+      "handle": "@UN_SecretaryGen",
+      "title": "联合国秘书长发出克制与保护平民的公开呼吁。",
+      "url": "https://x.com/UN_SecretaryGen/status/1912345678901234602",
+      "published_at": "2026-02-28T09:32:00Z",
+      "verification_status": "unverified"
     }
   ]
 }

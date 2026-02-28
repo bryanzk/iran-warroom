@@ -99,7 +99,13 @@ const CONTENT_TRANSLATIONS: Record<string, string> = {
   "伊朗外事部发布地区交通与安全提示。":
     "The Iranian Foreign Ministry posted regional transport and safety advisories.",
   "伊朗官方在其社媒发布受影响区域与民航提醒。":
-    "Iranian authorities posted affected region updates and civil aviation notices."
+    "Iranian authorities posted affected region updates and civil aviation notices.",
+  "伊朗官方社媒继续发布各省搜救与安全协助说明。":
+    "Iranian official social channels continued to post province-level rescue and safety guidance.",
+  "美国国务院发布对事态升级的立场更新。":
+    "The U.S. Department of State posted an update on escalation posture.",
+  "联合国秘书长发出克制与保护平民的公开呼吁。":
+    "The UN Secretary-General made a public call for restraint and civilian protection."
 };
 
 export function localizeContent(text: string, lang: Language): string {
