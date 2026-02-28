@@ -10,6 +10,7 @@ import { LocationList } from "@/components/LocationList";
 import { StatusCards } from "@/components/StatusCards";
 import { SourceDrawer } from "@/components/SourceDrawer";
 import { StatementCompare } from "@/components/StatementCompare";
+import { SocialMediaPanel } from "@/components/SocialMediaPanel";
 import { FactCheckPanel } from "@/components/FactCheckPanel";
 import { MediaGallery } from "@/components/MediaGallery";
 import { FAQ } from "@/components/FAQ";
@@ -238,6 +239,8 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                     ))}
                   </ul>
                 </section>
+
+                <SocialMediaPanel items={data.social_media} language={language} />
               </aside>
             </section>
 

@@ -1,4 +1,4 @@
-import { querySources } from "@/lib/query";
+import { querySources, querySocialMediaSources } from "@/lib/query";
 import { pick, type Language } from "@/lib/i18n";
 import type { LiveMessage, VerificationStatus } from "@/lib/types";
 
@@ -104,10 +104,27 @@ class LiveFeedService {
   }
 
   async refresh(): Promise<void> {
-    const sources = querySources();
+    const trustedSources = [
+      ...querySources().map((source) => ({
+        id: source.id,
+        url: source.url,
+        platform: source.publisher,
+        label: source.title
+      })),
+      ...querySocialMediaSources().map((source) => ({
+        id: source.id,
+        url: source.url,
+        platform: source.platform,
+        label: source.title
+      }))
+    ];
+
+    const uniqueSources = new Map(
+      trustedSources.map((source) => [source.url, source])
+    );
 
     await Promise.all(
-      sources.map(async (source) => {
+      Array.from(uniqueSources.values()).map(async (source) => {
         const probe = await probeSource(source.url);
         if (!probe.version) {
           return;
@@ -124,13 +141,15 @@ class LiveFeedService {
         }
 
         this.sourceVersions.set(source.url, probe.version);
+        const sourceLabel = source.label ? ` (${source.label})` : "";
+        const platformLabel = source.platform ? ` [${source.platform}]` : "";
         this.pushMessage({
-          source_id: source.id,
+          source_id: `${source.id}${sourceLabel ? platformLabel : ""}`,
           source_url: source.url,
           type: "source_update",
           verification_status: "verified",
-          text_zh: `来源 ${source.id} 检测到更新（版本：${probe.version}）。`,
-          text_en: `Source ${source.id} reported an update (version: ${probe.version}).`
+          text_zh: `来源 ${source.id}${platformLabel}${sourceLabel ? sourceLabel : ""} 检测到更新（版本：${probe.version}）。`,
+          text_en: `Source ${source.id}${platformLabel}${sourceLabel ? sourceLabel : ""} reported an update (version: ${probe.version}).`
         });
       })
     );

@@ -48,6 +48,16 @@ export interface EvidenceItem {
   verification_status: VerificationStatus;
 }
 
+export interface SocialMediaSource {
+  id: string;
+  platform: string;
+  handle: string;
+  title: string;
+  url: string;
+  published_at: string;
+  verification_status: VerificationStatus;
+}
+
 export interface InfrastructureStatus {
   sector: InfrastructureSector;
   status: InfrastructureState;
@@ -104,6 +114,7 @@ export interface SeedData {
   faq: Array<{ question: string; answer: string }>;
   regional_impacts: Array<{ country: string; summary: string; source_url: string; source_time: string }>;
   sources: Array<{ id: string; publisher: string; title: string; url: string; published_at: string }>;
+  social_media: SocialMediaSource[];
 }
 
 export interface EventQuery {

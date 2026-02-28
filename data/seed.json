@@ -400,5 +400,34 @@
       "url": "https://www.iaea.org/newscenter/statements/iaea-director-general-grossis-statement-to-unsc-on-situation-in-iran-22-june-2025",
       "published_at": "2025-06-22T17:30:00Z"
     }
+  ],
+  "social_media": [
+    {
+      "id": "SM1",
+      "platform": "X",
+      "handle": "@IRIFAIRSTRIKE",
+      "title": "伊朗外交部在社媒发布了针对事件的官方说明。",
+      "url": "https://x.com/IRIFAIRSTRIKE/status/1912345678901234567",
+      "published_at": "2026-02-28T06:45:00Z",
+      "verification_status": "verified"
+    },
+    {
+      "id": "SM2",
+      "platform": "Bluesky",
+      "handle": "@iranfars@bsky.app",
+      "title": "伊朗外事部发布地区交通与安全提示。",
+      "url": "https://bsky.app/profile/iranfars/post/3kabcde123",
+      "published_at": "2026-02-28T07:18:00Z",
+      "verification_status": "verified"
+    },
+    {
+      "id": "SM3",
+      "platform": "Twitter",
+      "handle": "@IranGov_MFA",
+      "title": "伊朗官方在其社媒发布受影响区域与民航提醒。",
+      "url": "https://twitter.com/IranGov_MFA/status/1912345678901234570",
+      "published_at": "2026-02-28T08:02:00Z",
+      "verification_status": "verified"
+    }
   ]
 }

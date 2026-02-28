@@ -5,6 +5,7 @@ import {
   queryFactChecksWithLanguage,
   queryInfrastructureWithLanguage,
   querySourcesWithLanguage,
+  querySocialMediaSourcesWithLanguage,
   queryStatementsWithLanguage
 } from "@/lib/query";
 import { parseLanguage } from "@/lib/i18n";
@@ -45,5 +46,11 @@ describe("i18n query layer", () => {
 
     expect(sources.length).toBeGreaterThan(0);
     expect(meta.headline).toContain("As of");
+  });
+
+  it("localizes social media source titles in english", () => {
+    const socialSources = querySocialMediaSourcesWithLanguage("en");
+    expect(socialSources.length).toBeGreaterThan(0);
+    expect(socialSources.some((source) => source.title.includes("The Iranian Ministry of Foreign Affairs"))).toBe(true);
   });
 });
