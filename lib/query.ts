@@ -1,6 +1,6 @@
 import { getSeedData } from "@/lib/data";
 import { mergeSimilarEvents } from "@/lib/normalize";
-import { isAllowedSourceUrl, sanitizeQueryText } from "@/lib/safety";
+import { isAllowedSourceUrl, isAllowedSocialSourceUrl, sanitizeQueryText } from "@/lib/safety";
 import { localizeContent, type Language } from "@/lib/i18n";
 import {
   assertValidEvent,
@@ -13,7 +13,8 @@ import type {
   FactCheckItem,
   InfrastructureStatus,
   Statement,
-  VerificationStatus
+  VerificationStatus,
+  SocialMediaSource
 } from "@/lib/types";
 
 function withinRange(value: string, from?: string, to?: string): boolean {
@@ -173,6 +174,12 @@ export function querySources(): Array<{ id: string; publisher: string; title: st
   return getSeedData().sources.filter((source) => isAllowedSourceUrl(source.url));
 }
 
+export function querySocialMediaSources(): SocialMediaSource[] {
+  return getSeedData()
+    .social_media.filter((source) => isAllowedSocialSourceUrl(source.url))
+    .map((source) => ({ ...source }));
+}
+
 function localizeSource(source: { id: string; publisher: string; title: string; url: string; published_at: string }, lang: Language) {
   return {
     ...source,
@@ -215,6 +222,17 @@ export function queryFactChecksWithLanguage(lang: Language): FactCheckItem[] {
 
 export function querySourcesWithLanguage(lang: Language): Array<{ id: string; publisher: string; title: string; url: string; published_at: string }> {
   return querySources().map((source) => localizeSource(source, lang));
+}
+
+function localizeSocialMediaSource(source: SocialMediaSource, lang: Language): SocialMediaSource {
+  return {
+    ...source,
+    title: localizeContent(source.title, lang)
+  };
+}
+
+export function querySocialMediaSourcesWithLanguage(lang: Language): SocialMediaSource[] {
+  return querySocialMediaSources().map((source) => localizeSocialMediaSource(source, lang));
 }
 
 export function getMetaWithLanguage(lang: Language): {

@@ -80,7 +80,26 @@ const CONTENT_TRANSLATIONS: Record<string, string> = {
     "Click 'View Source' on each card or timeline item to access the original link and publication time.",
   "有报道提及拦截导弹与坠落物通报。": "Reports mention missile interceptions and falling debris notifications.",
   "有报道提及导弹与无人机拦截及电力影响。":
-    "Reports mention missile/drone interceptions and power-related impacts."
+    "Reports mention missile/drone interceptions and power-related impacts.",
+  "可信社媒来源监控": "Trusted Social Feed",
+  "平台": "Platform",
+  "发布时间": "Published",
+  "来自": "From",
+  "社交平台来源": "Social-media source",
+  "官方社媒账号": "Official social accounts",
+  "暂无可信社媒来源": "No trusted social sources available",
+  "社交媒体监控（仅显示白名单内可信账号）":
+    "Social feed (trusted accounts within whitelist only)",
+  "暂无有效社交来源": "No valid social sources",
+  "X 账号": "X account",
+  "Bluesky 账号": "Bluesky account",
+  "官方频道": "Official channel",
+  "伊朗外交部在社媒发布了针对事件的官方说明。":
+    "The Iranian Ministry of Foreign Affairs posted an official statement on social media regarding the incident.",
+  "伊朗外事部发布地区交通与安全提示。":
+    "The Iranian Foreign Ministry posted regional transport and safety advisories.",
+  "伊朗官方在其社媒发布受影响区域与民航提醒。":
+    "Iranian authorities posted affected region updates and civil aviation notices."
 };
 
 export function localizeContent(text: string, lang: Language): string {

@@ -17,6 +17,10 @@ export function isAllowedSourceUrl(rawUrl: string): boolean {
   }
 }
 
+export function isAllowedSocialSourceUrl(rawUrl: string): boolean {
+  return isAllowedSourceUrl(rawUrl);
+}
+
 export function hasGraphicRisk(text: string): boolean {
   const normalized = text.toLowerCase();
   return BANNED_VISUAL_KEYWORDS.some((keyword) => normalized.includes(keyword));

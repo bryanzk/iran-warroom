@@ -4,6 +4,7 @@ import {
   queryEvents,
   queryInfrastructure,
   querySources,
+  querySocialMediaSources,
   queryStatements
 } from "@/lib/query";
 
@@ -32,6 +33,13 @@ describe("query layer", () => {
     const sources = querySources();
     expect(sources.length).toBeGreaterThan(0);
     expect(sources.every((source) => source.url.includes("http"))).toBe(true);
+  });
+
+  it("returns trusted social media sources only", () => {
+    const socialSources = querySocialMediaSources();
+    expect(socialSources.length).toBeGreaterThan(0);
+    expect(socialSources.every((source) => source.platform.length > 0)).toBe(true);
+    expect(socialSources.every((source) => source.url.startsWith("http"))).toBe(true);
   });
 
   it("supports infrastructure region filtering", () => {
