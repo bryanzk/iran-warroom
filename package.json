@@ -7,8 +7,9 @@
     "build": "next build",
     "postbuild": "node scripts/ensure-next-manifests.mjs",
     "start": "next start",
-    "deploy": "npx @opennextjs/cloudflare build && wrangler deploy",
-    "preview": "npx @opennextjs/cloudflare build && wrangler preview",
+    "cf:build": "npx @opennextjs/cloudflare build",
+    "deploy": "npm run cf:build && npx wrangler deploy",
+    "preview": "npm run cf:build && npx wrangler preview",
     "test": "vitest run",
     "test:watch": "vitest"
   },
