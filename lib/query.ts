@@ -12,6 +12,7 @@ import type {
   EventQuery,
   FactCheckItem,
   InfrastructureStatus,
+  SeedData,
   Statement,
   VerificationStatus,
   SocialMediaSource
@@ -250,6 +251,60 @@ export function getMetaWithLanguage(lang: Language): {
   return {
     ...meta,
     headline: localizeContent(meta.headline, lang)
+  };
+}
+
+function localizeRegionalImpacts(
+  impacts: SeedData["regional_impacts"],
+  lang: Language
+): SeedData["regional_impacts"] {
+  return impacts.map((impact) => ({
+    ...impact,
+    summary: localizeContent(impact.summary, lang)
+  }));
+}
+
+function localizeMedia(
+  media: SeedData["media"],
+  lang: Language
+): SeedData["media"] {
+  return media.map((item) => ({
+    ...item,
+    title: localizeContent(item.title, lang),
+    content_warning: localizeContent(item.content_warning, lang)
+  }));
+}
+
+function localizeFaq(items: SeedData["faq"], lang: Language): SeedData["faq"] {
+  return items.map((item) => ({
+    question: localizeContent(item.question, lang),
+    answer: localizeContent(item.answer, lang)
+  }));
+}
+
+export function queryDashboardWithLanguage(lang: Language): SeedData {
+  const seed = getSeedData();
+  const meta = getMetaWithLanguage(lang);
+
+  return {
+    ...seed,
+    meta: {
+      ...seed.meta,
+      updated_at: meta.updated_at,
+      last_successful_snapshot: meta.last_successful_snapshot,
+      coverage_start: meta.coverage_start,
+      coverage_end: meta.coverage_end,
+      headline: meta.headline
+    },
+    events: queryEventsWithLanguage({}, lang),
+    infrastructure: queryInfrastructureWithLanguage(undefined, lang),
+    statements: queryStatementsWithLanguage({}, lang),
+    factchecks: queryFactChecksWithLanguage(lang),
+    sources: querySourcesWithLanguage(lang),
+    social_media: querySocialMediaSourcesWithLanguage(lang),
+    regional_impacts: localizeRegionalImpacts(seed.regional_impacts, lang),
+    media: localizeMedia(seed.media, lang),
+    faq: localizeFaq(seed.faq, lang)
   };
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   countByVerification,
+  queryDashboardWithLanguage,
   queryEvents,
   queryInfrastructure,
   querySources,
@@ -52,5 +53,16 @@ describe("query layer", () => {
     expect(counts.verified).toBeGreaterThan(0);
     expect(counts.unverified).toBeGreaterThan(0);
     expect(counts.contested).toBeGreaterThan(0);
+  });
+
+  it("builds dashboard payload for auto-refresh sections", () => {
+    const payload = queryDashboardWithLanguage("en");
+    expect(payload.events.length).toBeGreaterThan(0);
+    expect(payload.infrastructure.length).toBeGreaterThan(0);
+    expect(payload.statements.length).toBeGreaterThan(0);
+    expect(payload.factchecks.length).toBeGreaterThan(0);
+    expect(payload.sources.length).toBeGreaterThan(0);
+    expect(payload.social_media.length).toBeGreaterThan(0);
+    expect(payload.meta.headline).toContain("As of");
   });
 });

@@ -24,16 +24,45 @@ interface IncidentDashboardProps {
   data: SeedData;
 }
 
+const AUTO_REFRESH_MS = 15000;
+
 function averageConfidence(events: Event[]): string {
   if (events.length === 0) return "0.00";
   const avg = events.reduce((acc, item) => acc + item.confidence, 0) / events.length;
   return avg.toFixed(2);
 }
 
+function formatUpdatedAt(
+  value: string | undefined,
+  language: Language
+): string {
+  if (!value) {
+    return "N/A";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  const utcText = `${date.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+  const locale = language === "zh" ? "zh-CN" : "en-US";
+  const localText = date.toLocaleString(locale, {
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+  return `${utcText} / ${localText}`;
+}
+
 export function IncidentDashboard({ data }: IncidentDashboardProps) {
+  const [dashboardData, setDashboardData] = useState<SeedData>(data);
   const [language, setLanguage] = useState<Language>("en");
   const [darkMode, setDarkMode] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>(data.events[0]?.id);
+  const [syncState, setSyncState] = useState<"syncing" | "live" | "error">("syncing");
   const [drawer, setDrawer] = useState<{ open: boolean; title: string; sources: InfrastructureStatus["evidence"] }>({
     open: false,
     title: "",
@@ -43,6 +72,66 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "test") {
+      return;
+    }
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let activeController: AbortController | undefined;
+
+    async function pullDashboard() {
+      activeController?.abort();
+      const controller = new AbortController();
+      activeController = controller;
+
+      try {
+        const response = await fetch(`/api/dashboard?lang=${language}`, {
+          cache: "no-store",
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const json = (await response.json()) as { data: SeedData };
+        if (cancelled) {
+          return;
+        }
+        setDashboardData(json.data);
+        setSyncState("live");
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setSyncState("error");
+      }
+    }
+
+    void pullDashboard();
+    timer = setInterval(() => {
+      void pullDashboard();
+    }, AUTO_REFRESH_MS);
+
+    return () => {
+      cancelled = true;
+      activeController?.abort();
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [language]);
+
+  useEffect(() => {
+    if (selectedEventId && dashboardData.events.some((item) => item.id === selectedEventId)) {
+      return;
+    }
+    setSelectedEventId(dashboardData.events[0]?.id);
+  }, [dashboardData.events, selectedEventId]);
 
   const defaultFilters = {
     region: "",
@@ -55,7 +144,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
   const clearFilters = () => setFilters(defaultFilters);
 
   const events = useMemo(() => {
-    return data.events.filter((event) => {
+    return dashboardData.events.filter((event) => {
       if (filters.category !== "all" && event.category !== filters.category) return false;
       if (filters.verificationStatus !== "all" && event.verification_status !== filters.verificationStatus) return false;
       if (event.confidence < filters.minConfidence) return false;
@@ -72,7 +161,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
 
       return true;
     });
-  }, [data.events, filters]);
+  }, [dashboardData.events, filters]);
 
   const selectedEvent = events.find((event) => event.id === selectedEventId) || events[0];
 
@@ -128,7 +217,14 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                   <span className="font-semibold tracking-[0.08em] uppercase">
                     {pick(language, "实时监测窗口", "Live Monitoring Window")}
                   </span>
-                  <span className="font-mono">2026-02-28 14:32 UTC</span>
+                  <span className="font-mono">{formatUpdatedAt(dashboardData.meta.updated_at, language)}</span>
+                  <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
+                    {syncState === "live"
+                      ? pick(language, "自动刷新", "Auto Refresh")
+                      : syncState === "syncing"
+                        ? pick(language, "同步中", "Syncing")
+                        : pick(language, "降级模式", "Degraded")}
+                  </span>
                 </div>
 
                 <h1 className="text-4xl font-extrabold leading-none tracking-tighter md:text-5xl">
@@ -136,7 +232,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 </h1>
 
                 <p className="mt-2 max-w-[70ch] text-sm leading-6 text-slate-600">
-                  {localizeContent(data.meta.headline, language)}
+                  {localizeContent(dashboardData.meta.headline, language)}
                 </p>
               </div>
 
@@ -216,7 +312,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
                   <MapPins
                     events={events}
-                    regionalImpacts={data.regional_impacts}
+                    regionalImpacts={dashboardData.regional_impacts}
                     selectedEventId={selectedEvent?.id}
                     onSelect={setSelectedEventId}
                     language={language}
@@ -227,7 +323,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 <section className="grid gap-4 2xl:grid-cols-[1.25fr_1fr]">
                   <Timeline events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} onClearFilters={clearFilters} language={language} />
                   <StatusCards
-                    items={data.infrastructure}
+                    items={dashboardData.infrastructure}
                     language={language}
                     onOpenSources={(item) =>
                       setDrawer({
@@ -249,7 +345,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                     {pick(language, "区域外溢", "Regional Spillover")}
                   </header>
                   <ul className="divide-y text-xs">
-                    {data.regional_impacts.map((impact) => (
+                    {dashboardData.regional_impacts.map((impact) => (
                       <li key={`${impact.country}-${impact.source_time}`} className="space-y-1 px-3 py-2">
                         <p className="font-semibold text-slate-700">{impact.country}</p>
                         <p className="leading-5 text-slate-600">{localizeContent(impact.summary, language)}</p>
@@ -267,7 +363,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                     {pick(language, "可信来源监控", "Trusted Source Monitor")}
                   </header>
                   <ul className="max-h-[20rem] divide-y overflow-y-auto text-xs">
-                    {data.sources.map((source) => (
+                    {dashboardData.sources.map((source) => (
                       <li key={source.id} className="space-y-1 px-3 py-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-semibold text-slate-700">{source.id}</span>
@@ -282,19 +378,19 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                   </ul>
                 </section>
 
-                <SocialMediaPanel items={data.social_media} language={language} />
+                <SocialMediaPanel items={dashboardData.social_media} language={language} />
               </aside>
             </motion.section>
 
             <motion.section variants={itemVariants} className="grid gap-4 2xl:grid-cols-[1.2fr_1fr]">
               <div className="space-y-4">
-                <ConflictNumbersPanel item={data.factchecks[0]} language={language} />
-                <StatementCompare statements={data.statements} language={language} />
-                <FactCheckPanel items={data.factchecks} language={language} />
+                <ConflictNumbersPanel item={dashboardData.factchecks[0]} language={language} />
+                <StatementCompare statements={dashboardData.statements} language={language} />
+                <FactCheckPanel items={dashboardData.factchecks} language={language} />
               </div>
               <div className="space-y-4">
-                <MediaGallery items={data.media} language={language} />
-                <FAQ items={data.faq} language={language} />
+                <MediaGallery items={dashboardData.media} language={language} />
+                <FAQ items={dashboardData.faq} language={language} />
               </div>
             </motion.section>
           </motion.div>
