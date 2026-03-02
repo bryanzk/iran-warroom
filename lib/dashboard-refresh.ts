@@ -117,7 +117,12 @@ class DashboardRefreshService {
   private running = false;
 
   start(): void {
-    if (this.started || process.env.NODE_ENV === "test") {
+    const isTestEnv =
+      typeof process !== "undefined" &&
+      typeof process.env !== "undefined" &&
+      process.env.NODE_ENV === "test";
+
+    if (this.started || isTestEnv) {
       return;
     }
     this.started = true;
