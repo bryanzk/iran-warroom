@@ -34,7 +34,7 @@ function averageConfidence(events: Event[]): string {
 
 function formatUpdatedAt(
   value: string | undefined,
-  language: Language
+  _language: Language
 ): string {
   if (!value) {
     return "N/A";
@@ -43,18 +43,22 @@ function formatUpdatedAt(
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-  const utcText = `${date.toISOString().slice(0, 16).replace("T", " ")} UTC`;
-  const locale = language === "zh" ? "zh-CN" : "en-US";
-  const localText = date.toLocaleString(locale, {
-    hour12: false,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  });
-  return `${utcText} / ${localText}`;
+  return `${date.toISOString().slice(0, 19)} UTC`;
+}
+
+function toSafeHttpUrl(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return undefined;
+    }
+    return parsed.toString();
+  } catch {
+    return undefined;
+  }
 }
 
 export function IncidentDashboard({ data }: IncidentDashboardProps) {
@@ -164,6 +168,17 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
   }, [dashboardData.events, filters]);
 
   const selectedEvent = events.find((event) => event.id === selectedEventId) || events[0];
+  const timelineEvents = useMemo(
+    () =>
+      [...events].sort((a, b) => {
+        const sourceDelta = b.source_time.localeCompare(a.source_time);
+        if (sourceDelta !== 0) {
+          return sourceDelta;
+        }
+        return b.timestamp.localeCompare(a.timestamp);
+      }),
+    [events]
+  );
 
   const metrics = useMemo(() => {
     const verified = events.filter((item) => item.verification_status === "verified").length;
@@ -321,7 +336,14 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 </section>
 
                 <section className="grid gap-4 2xl:grid-cols-[1.25fr_1fr]">
-                  <Timeline events={events} selectedEventId={selectedEvent?.id} onSelect={setSelectedEventId} onClearFilters={clearFilters} language={language} />
+                  <Timeline
+                    events={timelineEvents}
+                    selectedEventId={selectedEvent?.id}
+                    onSelect={setSelectedEventId}
+                    onClearFilters={clearFilters}
+                    lastUpdatedAt={dashboardData.meta.updated_at}
+                    language={language}
+                  />
                   <StatusCards
                     items={dashboardData.infrastructure}
                     language={language}
@@ -401,17 +423,28 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                   </header>
                   <ul className="max-h-[14rem] divide-y overflow-y-auto text-xs">
                     {dashboardData.regional_impacts.map((impact) => (
-                      <li key={`${impact.country}-${impact.source_time}`} className="space-y-1 px-3 py-2">
+                      <li key={`${impact.country}-${impact.source_time}`} className="space-y-1.5 px-3 py-2">
                         <p className="font-semibold text-slate-700">{impact.country}</p>
                         <p className="leading-5 text-slate-600">{localizeContent(impact.summary, language)}</p>
-                        <a
-                          className="inline-flex items-center gap-1 text-teal-700 underline transition-transform duration-150 active:translate-y-px"
-                          href={impact.source_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {pick(language, "来源", "Source")} · {impact.source_time}
-                        </a>
+                        {(() => {
+                          const safeUrl = toSafeHttpUrl(impact.source_url);
+                          const hostLabel = safeUrl ? new URL(safeUrl).host : pick(language, "无效链接", "Invalid URL");
+                          return safeUrl ? (
+                            <a
+                              className="inline-flex items-center gap-1 text-teal-700 underline transition-transform duration-150 active:translate-y-px"
+                              href={safeUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              title={safeUrl}
+                            >
+                              {pick(language, "来源", "Source")} · {hostLabel} · {impact.source_time}
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-slate-500">
+                              {pick(language, "来源", "Source")} · {hostLabel} · {impact.source_time}
+                            </span>
+                          );
+                        })()}
                       </li>
                     ))}
                   </ul>

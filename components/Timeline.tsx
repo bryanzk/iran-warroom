@@ -8,17 +8,34 @@ interface TimelineProps {
   selectedEventId?: string;
   onSelect: (eventId: string) => void;
   onClearFilters?: () => void;
+  lastUpdatedAt?: string;
   language?: Language;
 }
 
-export function Timeline({ events, selectedEventId, onSelect, onClearFilters, language = "en" }: TimelineProps) {
+function formatSyncTime(value: string | undefined): string {
+  if (!value) {
+    return "N/A";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return `${date.toISOString().slice(0, 19)}Z`;
+}
+
+export function Timeline({ events, selectedEventId, onSelect, onClearFilters, lastUpdatedAt, language = "en" }: TimelineProps) {
   return (
     <section className="card p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold">{pick(language, "时间线（按小时）", "Timeline (Hourly)")}</h2>
-        <span className="small-muted">
-          {pick(language, "关键节点均附来源发布时间", "Each key node includes source publication time")}
-        </span>
+        <div className="text-right">
+          <span className="block small-muted">
+            {pick(language, "关键节点均附来源发布时间", "Each key node includes source publication time")}
+          </span>
+          <span className="font-mono text-[10px] text-slate-500">
+            {pick(language, "最后同步", "Last Sync")}: {formatSyncTime(lastUpdatedAt)}
+          </span>
+        </div>
       </div>
 
       {events.length === 0 ? (
