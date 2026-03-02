@@ -8,8 +8,8 @@
     "postbuild": "node scripts/ensure-next-manifests.mjs",
     "start": "next start",
     "cf:build": "npx @opennextjs/cloudflare build",
-    "deploy": "npm run cf:build && npx wrangler deploy",
-    "preview": "npm run cf:build && npx wrangler preview",
+    "deploy": "npx wrangler deploy",
+    "preview": "npx wrangler preview",
     "test": "vitest run",
     "test:watch": "vitest"
   },
