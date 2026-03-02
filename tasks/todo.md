@@ -132,3 +132,28 @@
 - 页面通过 `/api/dashboard` 自动刷新可见新时间戳，不再仅依赖静态 seed 初值。
 - 新增测试 `tests/dashboard-refresh.test.ts` 通过。
 - `npm test`、`npm run build` 全部通过。
+
+---
+
+## 2026-03-02 线上仅启动消息不刷新（紧急修复）
+
+### 任务拆解
+1. 复核 `source-probe` 探测结果，确认 `HEAD/GET`、状态码与版本信号覆盖不足的路径。
+2. 为实时流与 dashboard 刷新服务补齐“首次轮询基线比对”，避免首次仅缓存版本不触发更新。
+3. 对缺少 `etag/last-modified/dateModified` 的来源增加稳定回退（页面内容指纹）并输出可诊断状态。
+4. 增加测试覆盖：首次轮询、版本变化、无匹配来源、探测失败降级。
+5. 执行验证：定向测试 + 全量测试 + 构建。
+6. 部署并回查线上 API（`/api/live/messages`、`/api/dashboard`）确认有非启动类更新。
+
+### 依赖关系
+- 2 依赖 1。
+- 3 依赖 1。
+- 4 依赖 2/3。
+- 5 依赖 4。
+- 6 依赖 5。
+
+### 验收标准
+- `Live update service started` 之外，`/api/live/messages` 可出现 `source_update` 或来源异常诊断消息。
+- `/api/dashboard` 的 `meta.updated_at` 在来源变更后可推进，且相关区块时间字段联动更新。
+- 探测失败不会导致接口 500，失败来源会被安全跳过并可追踪。
+- `npm test`、`npm run build` 通过后再部署。

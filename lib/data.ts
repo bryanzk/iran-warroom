@@ -8,3 +8,9 @@ export function getSeedData(): SeedData {
 export function startSeedAutoRefresh(): void {
   getDashboardRefreshService().start();
 }
+
+export async function refreshSeedSnapshot(): Promise<void> {
+  const service = getDashboardRefreshService();
+  service.start();
+  await service.refreshOnce();
+}

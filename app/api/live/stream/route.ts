@@ -1,16 +1,17 @@
 import { NextRequest } from "next/server";
 import { parseLanguage } from "@/lib/i18n";
 import { getLiveFeedService } from "@/lib/live-feed";
-import { startSeedAutoRefresh } from "@/lib/data";
+import { refreshSeedSnapshot } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  startSeedAutoRefresh();
+  await refreshSeedSnapshot();
   const lang = parseLanguage(request.nextUrl.searchParams.get("lang"));
   const service = getLiveFeedService();
   service.start();
+  await service.refresh();
 
   const encoder = new TextEncoder();
   let cursorVersion = service.getVersion();
@@ -27,16 +28,18 @@ export async function GET(request: NextRequest) {
       });
 
       const timer = setInterval(() => {
-        const nextVersion = service.getVersion();
-        if (nextVersion !== cursorVersion) {
-          cursorVersion = nextVersion;
-          send("update", {
-            messages: service.getMessages(lang, 30),
-            version: cursorVersion
-          });
-        } else {
-          send("ping", { timestamp: new Date().toISOString() });
-        }
+        void service.refresh().finally(() => {
+          const nextVersion = service.getVersion();
+          if (nextVersion !== cursorVersion) {
+            cursorVersion = nextVersion;
+            send("update", {
+              messages: service.getMessages(lang, 30),
+              version: cursorVersion
+            });
+          } else {
+            send("ping", { timestamp: new Date().toISOString() });
+          }
+        });
       }, 3000);
 
       request.signal.addEventListener("abort", () => {

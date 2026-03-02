@@ -1,7 +1,7 @@
 import { querySources, querySocialMediaSources } from "@/lib/query";
 import { pick, type Language } from "@/lib/i18n";
 import type { LiveMessage, VerificationStatus } from "@/lib/types";
-import { extractVersionFromHtml, probeSourceVersion } from "@/lib/source-probe";
+import { extractVersionFromHtml, hasVersionChanged, probeSourceVersion } from "@/lib/source-probe";
 
 export { extractVersionFromHtml };
 
@@ -25,9 +25,10 @@ function stableId(prefix: string): string {
 
 class LiveFeedService {
   private initialized = false;
-  private timer: NodeJS.Timeout | null = null;
   private messages: InternalMessage[] = [];
   private sourceVersions = new Map<string, string>();
+  private refreshing: Promise<void> | null = null;
+  private lastRefreshedAt = 0;
   private version = 0;
 
   start(): void {
@@ -42,26 +43,43 @@ class LiveFeedService {
       text_zh: "实时消息服务已启动，正在轮询可信来源更新。",
       text_en: "Live update service started. Polling trusted sources for changes."
     });
-
-    void this.refresh();
-    this.timer = setInterval(() => {
-      void this.refresh();
-    }, POLL_INTERVAL_MS);
   }
 
-  async refresh(): Promise<void> {
+  async refresh(force = false): Promise<void> {
+    const now = Date.now();
+    if (!force && now - this.lastRefreshedAt < POLL_INTERVAL_MS) {
+      return;
+    }
+
+    if (this.refreshing) {
+      await this.refreshing;
+      return;
+    }
+
+    this.refreshing = this.runRefresh();
+    try {
+      await this.refreshing;
+      this.lastRefreshedAt = Date.now();
+    } finally {
+      this.refreshing = null;
+    }
+  }
+
+  private async runRefresh(): Promise<void> {
     const trustedSources = [
       ...querySources().map((source) => ({
         id: source.id,
         url: source.url,
         platform: source.publisher,
-        label: source.title
+        label: source.title,
+        baselineVersion: source.published_at
       })),
       ...querySocialMediaSources().map((source) => ({
         id: source.id,
         url: source.url,
         platform: source.platform,
-        label: source.title
+        label: source.title,
+        baselineVersion: source.published_at
       }))
     ];
 
@@ -79,13 +97,12 @@ class LiveFeedService {
         const previousVersion = this.sourceVersions.get(source.url);
         if (!previousVersion) {
           this.sourceVersions.set(source.url, probe.version);
+          if (!hasVersionChanged(probe.version, source.baselineVersion)) {
+            return;
+          }
+        } else if (!hasVersionChanged(probe.version, previousVersion)) {
           return;
         }
-
-        if (previousVersion === probe.version) {
-          return;
-        }
-
         this.sourceVersions.set(source.url, probe.version);
         const platformLabel = source.platform ? ` [${source.platform}]` : "";
         const sourceLabel = source.label ? ` — ${source.label}` : "";

@@ -1,5 +1,5 @@
 import seed from "@/data/seed.json";
-import { probeSourceVersion } from "@/lib/source-probe";
+import { hasVersionChanged, probeSourceVersion } from "@/lib/source-probe";
 import type { SeedData } from "@/lib/types";
 
 const DASHBOARD_REFRESH_INTERVAL_MS = 60_000;
@@ -91,30 +91,68 @@ export function applySourceUpdateToSnapshot(
   return touched;
 }
 
-function collectTrackedSourceUrls(snapshot: SeedData): string[] {
-  const urls = new Set<string>();
+interface TrackedSource {
+  url: string;
+  baselineVersion?: string;
+}
 
-  snapshot.sources.forEach((item) => urls.add(item.url));
+function toMillis(value?: string): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const millis = Date.parse(value);
+  return Number.isNaN(millis) ? undefined : millis;
+}
+
+function keepNewer(existing: string | undefined, candidate: string | undefined): string | undefined {
+  if (!candidate) {
+    return existing;
+  }
+  if (!existing) {
+    return candidate;
+  }
+  const existingMillis = toMillis(existing);
+  const candidateMillis = toMillis(candidate);
+  if (typeof existingMillis === "number" && typeof candidateMillis === "number") {
+    return candidateMillis > existingMillis ? candidate : existing;
+  }
+  return candidate;
+}
+
+function collectTrackedSourceUrls(snapshot: SeedData): TrackedSource[] {
+  const tracked = new Map<string, string | undefined>();
+  const touch = (url?: string, observedAt?: string) => {
+    if (!url) {
+      return;
+    }
+    const existing = tracked.get(url);
+    tracked.set(url, keepNewer(existing, observedAt));
+  };
+
+  snapshot.sources.forEach((item) => touch(item.url, item.published_at));
   snapshot.social_media.forEach((item) => {
-    if (item.url) urls.add(item.url);
-    if (item.source_url) urls.add(item.source_url);
+    touch(item.url, item.published_at);
+    touch(item.source_url, item.published_at);
   });
-  snapshot.events.forEach((item) => urls.add(item.source_url));
-  snapshot.infrastructure.forEach((item) => item.evidence.forEach((evidence) => urls.add(evidence.source_url)));
-  snapshot.statements.forEach((item) => urls.add(item.source_url));
-  snapshot.factchecks.forEach((item) => item.sources.forEach((source) => urls.add(source.source_url)));
-  snapshot.regional_impacts.forEach((item) => urls.add(item.source_url));
-  snapshot.media.forEach((item) => urls.add(item.source_url));
+  snapshot.events.forEach((item) => touch(item.source_url, item.source_time));
+  snapshot.infrastructure.forEach((item) => item.evidence.forEach((evidence) => touch(evidence.source_url, evidence.source_time)));
+  snapshot.statements.forEach((item) => touch(item.source_url, item.timestamp));
+  snapshot.factchecks.forEach((item) => item.sources.forEach((source) => touch(source.source_url, source.source_time)));
+  snapshot.regional_impacts.forEach((item) => touch(item.source_url, item.source_time));
+  snapshot.media.forEach((item) => touch(item.source_url, item.source_time));
 
-  return Array.from(urls.values());
+  return Array.from(tracked.entries()).map(([url, baselineVersion]) => ({
+    url,
+    baselineVersion
+  }));
 }
 
 class DashboardRefreshService {
   private snapshot = cloneSeedData(seed as SeedData);
   private sourceVersions = new Map<string, string>();
   private started = false;
-  private timer: NodeJS.Timeout | null = null;
   private running = false;
+  private lastRefreshAt = 0;
 
   start(): void {
     const isTestEnv =
@@ -126,39 +164,49 @@ class DashboardRefreshService {
       return;
     }
     this.started = true;
-    void this.refreshOnce();
-    this.timer = setInterval(() => {
-      void this.refreshOnce();
-    }, DASHBOARD_REFRESH_INTERVAL_MS);
   }
 
   getSnapshot(): SeedData {
     return cloneSeedData(this.snapshot);
   }
 
-  async refreshOnce(): Promise<number> {
+  async refreshOnce(force = false): Promise<number> {
+    const now = Date.now();
+    if (!force && now - this.lastRefreshAt < DASHBOARD_REFRESH_INTERVAL_MS) {
+      return 0;
+    }
     if (this.running) {
       return 0;
     }
     this.running = true;
+    this.lastRefreshAt = now;
     let touched = 0;
     try {
-      const urls = collectTrackedSourceUrls(this.snapshot);
-      for (const url of urls) {
-        const probe = await probeSourceVersion(url);
+      const trackedSources = collectTrackedSourceUrls(this.snapshot);
+      const probes = await Promise.all(
+        trackedSources.map(async (source) => ({
+          source,
+          probe: await probeSourceVersion(source.url)
+        }))
+      );
+      for (const { source, probe } of probes) {
         if (!probe.version) {
           continue;
         }
-        const previousVersion = this.sourceVersions.get(url);
+        const previousVersion = this.sourceVersions.get(source.url);
         if (!previousVersion) {
-          this.sourceVersions.set(url, probe.version);
+          this.sourceVersions.set(source.url, probe.version);
+          if (!hasVersionChanged(probe.version, source.baselineVersion)) {
+            continue;
+          }
+          touched += applySourceUpdateToSnapshot(this.snapshot, source.url, probe.checkedAt);
           continue;
         }
-        if (previousVersion === probe.version) {
+        if (!hasVersionChanged(probe.version, previousVersion)) {
           continue;
         }
-        this.sourceVersions.set(url, probe.version);
-        touched += applySourceUpdateToSnapshot(this.snapshot, url, probe.checkedAt);
+        this.sourceVersions.set(source.url, probe.version);
+        touched += applySourceUpdateToSnapshot(this.snapshot, source.url, probe.checkedAt);
       }
       return touched;
     } finally {

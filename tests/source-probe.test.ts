@@ -1,0 +1,22 @@
+import { describe, expect, it } from "vitest";
+import { hasVersionChanged } from "@/lib/source-probe";
+
+describe("source probe version comparison", () => {
+  it("detects newer ISO timestamp as changed", () => {
+    expect(hasVersionChanged("2026-03-02T16:00:00Z", "2026-03-02T15:00:00Z")).toBe(true);
+  });
+
+  it("ignores same or older ISO timestamp", () => {
+    expect(hasVersionChanged("2026-03-02T15:00:00Z", "2026-03-02T15:00:00Z")).toBe(false);
+    expect(hasVersionChanged("2026-03-02T14:00:00Z", "2026-03-02T15:00:00Z")).toBe(false);
+  });
+
+  it("falls back to direct token comparison for opaque versions", () => {
+    expect(hasVersionChanged("etag:abc", "etag:def")).toBe(true);
+    expect(hasVersionChanged("etag:abc", "etag:abc")).toBe(false);
+  });
+
+  it("does not report change when no reference exists", () => {
+    expect(hasVersionChanged("etag:abc")).toBe(false);
+  });
+});

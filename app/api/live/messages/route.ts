@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseLanguage } from "@/lib/i18n";
 import { getLiveFeedService } from "@/lib/live-feed";
-import { startSeedAutoRefresh } from "@/lib/data";
+import { refreshSeedSnapshot } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  startSeedAutoRefresh();
+  await refreshSeedSnapshot();
   const search = request.nextUrl.searchParams;
   const lang = parseLanguage(search.get("lang"));
   const limitRaw = search.get("limit");
@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
 
   const service = getLiveFeedService();
   service.start();
+  await service.refresh();
 
   const messages = service.getMessages(lang, Number.isFinite(limit) ? limit : 30);
 
