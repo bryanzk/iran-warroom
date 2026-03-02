@@ -1,11 +1,13 @@
 import { NextRequest } from "next/server";
 import { parseLanguage } from "@/lib/i18n";
 import { getLiveFeedService } from "@/lib/live-feed";
+import { startSeedAutoRefresh } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
+  startSeedAutoRefresh();
   const lang = parseLanguage(request.nextUrl.searchParams.get("lang"));
   const service = getLiveFeedService();
   service.start();

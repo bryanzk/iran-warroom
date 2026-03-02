@@ -284,7 +284,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
             initial="hidden"
             animate="show"
           >
-            <motion.section variants={itemVariants} className="grid gap-4 xl:grid-cols-[1.62fr_1fr]">
+            <motion.section variants={itemVariants} className="grid gap-4 xl:grid-cols-[1.34fr_1.18fr] 2xl:grid-cols-[1.22fr_1.28fr]">
               <section className="space-y-4 xl:pr-1">
                 <section className="dense-block p-3">
                   <div className="mb-2 grid gap-2 md:grid-cols-3">
@@ -339,46 +339,83 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
               <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
                 <LiveUpdatePanel language={language} />
 
+                <section className="grid gap-4 2xl:grid-cols-2">
+                  <section className="dense-block overflow-hidden">
+                    <header className="signal-line flex items-center justify-between gap-2 px-3 py-2 text-sm font-semibold">
+                      <span className="inline-flex items-center gap-2">
+                        <ShieldCheck size={16} weight="duotone" className="text-teal-700" />
+                        {pick(language, "可信来源监控", "Trusted Source Monitor")}
+                      </span>
+                      <span className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.08em] text-slate-500">
+                        <span className="live-dot" />
+                        {dashboardData.sources.length}
+                      </span>
+                    </header>
+                    <p className="px-3 pt-2 text-xs text-slate-500">
+                      {pick(language, "聚合官方通报与主流媒体，按时间倒序展示。", "Official statements and major media updates sorted by recency.")}
+                    </p>
+                    <ul className="mt-2 max-h-[28rem] divide-y overflow-y-auto text-xs">
+                      {dashboardData.sources.length === 0 ? (
+                        <li className="px-3 py-3 text-slate-500">
+                          {pick(language, "暂无可展示来源", "No source updates available")}
+                        </li>
+                      ) : (
+                        dashboardData.sources.map((source) => (
+                          <li key={source.id} className="space-y-1.5 px-3 py-2.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex min-w-0 items-center gap-1.5">
+                                <span className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-700">
+                                  {source.id}
+                                </span>
+                                <span className="truncate text-[10px] uppercase tracking-wide text-slate-500">{source.publisher}</span>
+                              </div>
+                              <span className="shrink-0 font-mono text-[10px] text-slate-500">{source.published_at.slice(0, 16)}Z</span>
+                            </div>
+                            <p className="leading-5 text-slate-700">{source.title}</p>
+                            <a
+                              className="inline-flex items-center gap-1 text-teal-700 underline transition-transform duration-150 active:translate-y-px"
+                              href={source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {pick(language, "打开来源", "Open Source")}
+                            </a>
+                          </li>
+                        ))
+                      )}
+                    </ul>
+                  </section>
+
+                  <SocialMediaPanel
+                    items={dashboardData.social_media}
+                    language={language}
+                    listMaxHeightClass="max-h-[28rem]"
+                    className="2xl:h-full"
+                  />
+                </section>
+
                 <section className="dense-block overflow-hidden">
                   <header className="signal-line flex items-center gap-2 px-3 py-2 text-sm font-semibold">
                     <WarningCircle size={16} weight="duotone" className="text-teal-700" />
                     {pick(language, "区域外溢", "Regional Spillover")}
                   </header>
-                  <ul className="divide-y text-xs">
+                  <ul className="max-h-[14rem] divide-y overflow-y-auto text-xs">
                     {dashboardData.regional_impacts.map((impact) => (
                       <li key={`${impact.country}-${impact.source_time}`} className="space-y-1 px-3 py-2">
                         <p className="font-semibold text-slate-700">{impact.country}</p>
                         <p className="leading-5 text-slate-600">{localizeContent(impact.summary, language)}</p>
-                        <a className="text-teal-700 underline" href={impact.source_url} target="_blank" rel="noreferrer">
+                        <a
+                          className="inline-flex items-center gap-1 text-teal-700 underline transition-transform duration-150 active:translate-y-px"
+                          href={impact.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           {pick(language, "来源", "Source")} · {impact.source_time}
                         </a>
                       </li>
                     ))}
                   </ul>
                 </section>
-
-                <section className="dense-block overflow-hidden">
-                  <header className="signal-line flex items-center gap-2 px-3 py-2 text-sm font-semibold">
-                    <ShieldCheck size={16} weight="duotone" className="text-teal-700" />
-                    {pick(language, "可信来源监控", "Trusted Source Monitor")}
-                  </header>
-                  <ul className="max-h-[20rem] divide-y overflow-y-auto text-xs">
-                    {dashboardData.sources.map((source) => (
-                      <li key={source.id} className="space-y-1 px-3 py-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-semibold text-slate-700">{source.id}</span>
-                          <span className="font-mono text-[10px] text-slate-500">{source.published_at.slice(0, 16)}Z</span>
-                        </div>
-                        <p className="text-slate-600">{source.title}</p>
-                        <a className="text-teal-700 underline" href={source.url} target="_blank" rel="noreferrer">
-                          {pick(language, "打开来源", "Open Source")}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-
-                <SocialMediaPanel items={dashboardData.social_media} language={language} />
               </aside>
             </motion.section>
 

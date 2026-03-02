@@ -1,11 +1,9 @@
 import { querySources, querySocialMediaSources } from "@/lib/query";
 import { pick, type Language } from "@/lib/i18n";
 import type { LiveMessage, VerificationStatus } from "@/lib/types";
+import { extractVersionFromHtml, probeSourceVersion } from "@/lib/source-probe";
 
-interface SourceProbeResult {
-  version?: string;
-  checkedAt: string;
-}
+export { extractVersionFromHtml };
 
 interface InternalMessage {
   id: string;
@@ -23,58 +21,6 @@ const POLL_INTERVAL_MS = 60_000;
 
 function stableId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
-export function extractVersionFromHtml(html: string): string | undefined {
-  const patterns = [
-    /article:modified_time"\s+content="([^"]+)"/i,
-    /dateModified"\s*:\s*"([^"]+)"/i,
-    /dcterms\.date"\s+content="([^"]+)"/i,
-    /meta\s+name="last-modified"\s+content="([^"]+)"/i
-  ];
-
-  for (const pattern of patterns) {
-    const matched = html.match(pattern);
-    if (matched?.[1]) {
-      return matched[1];
-    }
-  }
-
-  return undefined;
-}
-
-async function probeSource(url: string): Promise<SourceProbeResult> {
-  const checkedAt = new Date().toISOString();
-
-  try {
-    const headResponse = await fetch(url, {
-      method: "HEAD",
-      redirect: "follow",
-      cache: "no-store"
-    });
-
-    const etag = headResponse.headers.get("etag") || undefined;
-    const lastModified = headResponse.headers.get("last-modified") || undefined;
-
-    if (etag || lastModified) {
-      return { version: etag || lastModified, checkedAt };
-    }
-  } catch {
-    // Fallback to GET parsing.
-  }
-
-  try {
-    const getResponse = await fetch(url, {
-      method: "GET",
-      redirect: "follow",
-      cache: "no-store"
-    });
-
-    const text = await getResponse.text();
-    return { version: extractVersionFromHtml(text), checkedAt };
-  } catch {
-    return { checkedAt };
-  }
 }
 
 class LiveFeedService {
@@ -125,7 +71,7 @@ class LiveFeedService {
 
     await Promise.all(
       Array.from(uniqueSources.values()).map(async (source) => {
-        const probe = await probeSource(source.url);
+        const probe = await probeSourceVersion(source.url);
         if (!probe.version) {
           return;
         }

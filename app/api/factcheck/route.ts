@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getMetaWithLanguage, queryFactChecksWithLanguage } from "@/lib/query";
 import { parseLanguage } from "@/lib/i18n";
+import { startSeedAutoRefresh } from "@/lib/data";
 
 export async function GET(request: Request) {
+  startSeedAutoRefresh();
   const url = new URL(request.url);
   const lang = parseLanguage(url.searchParams.get("lang"));
   const data = queryFactChecksWithLanguage(lang);

@@ -1,6 +1,10 @@
-import seed from "@/data/seed.json";
+import { getDashboardRefreshService } from "@/lib/dashboard-refresh";
 import type { SeedData } from "@/lib/types";
 
 export function getSeedData(): SeedData {
-  return seed as SeedData;
+  return getDashboardRefreshService().getSnapshot();
+}
+
+export function startSeedAutoRefresh(): void {
+  getDashboardRefreshService().start();
 }
