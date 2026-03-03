@@ -16,68 +16,54 @@ export function applySourceUpdateToSnapshot(
   let touched = 0;
 
   snapshot.sources.forEach((item) => {
-    if (item.url === sourceUrl && item.published_at !== observedAt) {
-      item.published_at = observedAt;
+    if (item.url === sourceUrl) {
       touched += 1;
     }
   });
 
   snapshot.social_media.forEach((item) => {
     const candidateUrl = item.url || item.source_url;
-    if (candidateUrl === sourceUrl && item.published_at !== observedAt) {
-      item.published_at = observedAt;
+    if (candidateUrl === sourceUrl) {
       touched += 1;
     }
   });
 
   snapshot.events.forEach((item) => {
-    if (item.source_url === sourceUrl && item.source_time !== observedAt) {
-      item.source_time = observedAt;
+    if (item.source_url === sourceUrl) {
       touched += 1;
     }
   });
 
   snapshot.infrastructure.forEach((item) => {
-    let evidenceTouched = false;
     item.evidence.forEach((evidence) => {
-      if (evidence.source_url === sourceUrl && evidence.source_time !== observedAt) {
-        evidence.source_time = observedAt;
-        evidenceTouched = true;
+      if (evidence.source_url === sourceUrl) {
         touched += 1;
       }
     });
-    if (evidenceTouched && item.last_updated !== observedAt) {
-      item.last_updated = observedAt;
-      touched += 1;
-    }
   });
 
   snapshot.statements.forEach((item) => {
-    if (item.source_url === sourceUrl && item.timestamp !== observedAt) {
-      item.timestamp = observedAt;
+    if (item.source_url === sourceUrl) {
       touched += 1;
     }
   });
 
   snapshot.factchecks.forEach((item) => {
     item.sources.forEach((source) => {
-      if (source.source_url === sourceUrl && source.source_time !== observedAt) {
-        source.source_time = observedAt;
+      if (source.source_url === sourceUrl) {
         touched += 1;
       }
     });
   });
 
   snapshot.regional_impacts.forEach((item) => {
-    if (item.source_url === sourceUrl && item.source_time !== observedAt) {
-      item.source_time = observedAt;
+    if (item.source_url === sourceUrl) {
       touched += 1;
     }
   });
 
   snapshot.media.forEach((item) => {
-    if (item.source_url === sourceUrl && item.source_time !== observedAt) {
-      item.source_time = observedAt;
+    if (item.source_url === sourceUrl) {
       touched += 1;
     }
   });
@@ -105,7 +91,6 @@ export function switchSourceUrlInSnapshot(
   snapshot.sources.forEach((item) => {
     if (item.url === fromUrl) {
       item.url = toUrl;
-      item.published_at = observedAt;
       touched += 1;
     }
   });
@@ -113,12 +98,10 @@ export function switchSourceUrlInSnapshot(
   snapshot.social_media.forEach((item) => {
     if (item.url === fromUrl) {
       item.url = toUrl;
-      item.published_at = observedAt;
       touched += 1;
     }
     if (item.source_url === fromUrl) {
       item.source_url = toUrl;
-      item.published_at = observedAt;
       touched += 1;
     }
   });
@@ -126,31 +109,22 @@ export function switchSourceUrlInSnapshot(
   snapshot.events.forEach((item) => {
     if (item.source_url === fromUrl) {
       item.source_url = toUrl;
-      item.source_time = observedAt;
       touched += 1;
     }
   });
 
   snapshot.infrastructure.forEach((item) => {
-    let evidenceTouched = false;
     item.evidence.forEach((evidence) => {
       if (evidence.source_url === fromUrl) {
         evidence.source_url = toUrl;
-        evidence.source_time = observedAt;
-        evidenceTouched = true;
         touched += 1;
       }
     });
-    if (evidenceTouched) {
-      item.last_updated = observedAt;
-      touched += 1;
-    }
   });
 
   snapshot.statements.forEach((item) => {
     if (item.source_url === fromUrl) {
       item.source_url = toUrl;
-      item.timestamp = observedAt;
       touched += 1;
     }
   });
@@ -159,7 +133,6 @@ export function switchSourceUrlInSnapshot(
     item.sources.forEach((source) => {
       if (source.source_url === fromUrl) {
         source.source_url = toUrl;
-        source.source_time = observedAt;
         touched += 1;
       }
     });
@@ -168,7 +141,6 @@ export function switchSourceUrlInSnapshot(
   snapshot.regional_impacts.forEach((item) => {
     if (item.source_url === fromUrl) {
       item.source_url = toUrl;
-      item.source_time = observedAt;
       touched += 1;
     }
   });
@@ -176,7 +148,6 @@ export function switchSourceUrlInSnapshot(
   snapshot.media.forEach((item) => {
     if (item.source_url === fromUrl) {
       item.source_url = toUrl;
-      item.source_time = observedAt;
       touched += 1;
     }
   });

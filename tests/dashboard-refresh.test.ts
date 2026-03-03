@@ -8,8 +8,9 @@ function cloneSeed(): SeedData {
 }
 
 describe("dashboard refresh", () => {
-  it("propagates source updates to all linked dashboard sections", () => {
+  it("preserves source publication timestamps while updating snapshot sync metadata", () => {
     const snapshot = cloneSeed();
+    const before = cloneSeed();
     const observedAt = "2026-03-02T13:00:00Z";
     const apLiveUrl = "https://apnews.com/live/live-updates-israel-iran-february-28-2026";
 
@@ -20,25 +21,38 @@ describe("dashboard refresh", () => {
     expect(snapshot.meta.last_successful_snapshot).toBe(observedAt);
     expect(snapshot.meta.coverage_end).toBe(observedAt);
 
-    expect(snapshot.sources.some((item) => item.url === apLiveUrl && item.published_at === observedAt)).toBe(true);
-    expect(snapshot.events.some((item) => item.source_url === apLiveUrl && item.source_time === observedAt)).toBe(true);
-    expect(snapshot.infrastructure.some((item) => item.evidence.some((evidence) => evidence.source_url === apLiveUrl && evidence.source_time === observedAt))).toBe(true);
-    expect(snapshot.infrastructure.some((item) => item.evidence.some((evidence) => evidence.source_url === apLiveUrl) && item.last_updated === observedAt)).toBe(true);
-    expect(snapshot.statements.some((item) => item.source_url === apLiveUrl && item.timestamp === observedAt)).toBe(true);
-    expect(snapshot.factchecks.some((item) => item.sources.some((source) => source.source_url === apLiveUrl && source.source_time === observedAt))).toBe(true);
-    expect(snapshot.regional_impacts.some((item) => item.source_url === apLiveUrl && item.source_time === observedAt)).toBe(true);
-    expect(snapshot.media.some((item) => item.source_url === apLiveUrl && item.source_time === observedAt)).toBe(true);
+    expect(snapshot.sources.filter((item) => item.url === apLiveUrl).map((item) => item.published_at)).toEqual(
+      before.sources.filter((item) => item.url === apLiveUrl).map((item) => item.published_at)
+    );
+    expect(snapshot.events.filter((item) => item.source_url === apLiveUrl).map((item) => item.source_time)).toEqual(
+      before.events.filter((item) => item.source_url === apLiveUrl).map((item) => item.source_time)
+    );
+    expect(
+      snapshot.infrastructure
+        .flatMap((item) => item.evidence.filter((evidence) => evidence.source_url === apLiveUrl))
+        .map((evidence) => evidence.source_time)
+    ).toEqual(
+      before.infrastructure
+        .flatMap((item) => item.evidence.filter((evidence) => evidence.source_url === apLiveUrl))
+        .map((evidence) => evidence.source_time)
+    );
+    expect(snapshot.statements.filter((item) => item.source_url === apLiveUrl).map((item) => item.timestamp)).toEqual(
+      before.statements.filter((item) => item.source_url === apLiveUrl).map((item) => item.timestamp)
+    );
   });
 
-  it("updates social media entries when the post url changes", () => {
+  it("keeps social media published_at unchanged when only refresh detection happens", () => {
     const snapshot = cloneSeed();
+    const before = cloneSeed();
     const observedAt = "2026-03-02T13:05:00Z";
     const socialUrl = "https://x.com/IRIFAIRSTRIKE/status/1912345678901234567";
 
     const touched = applySourceUpdateToSnapshot(snapshot, socialUrl, observedAt);
 
     expect(touched).toBeGreaterThan(0);
-    expect(snapshot.social_media.some((item) => item.url === socialUrl && item.published_at === observedAt)).toBe(true);
+    expect(snapshot.social_media.filter((item) => item.url === socialUrl).map((item) => item.published_at)).toEqual(
+      before.social_media.filter((item) => item.url === socialUrl).map((item) => item.published_at)
+    );
     expect(snapshot.meta.updated_at).toBe(observedAt);
   });
 

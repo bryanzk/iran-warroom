@@ -1,3 +1,5 @@
+import { useEffect, useId } from "react";
+import { createPortal } from "react-dom";
 import { pick, type Language } from "@/lib/i18n";
 
 interface ContentWarningModalProps {
@@ -7,12 +9,32 @@ interface ContentWarningModalProps {
 }
 
 export function ContentWarningModal({ open, onConfirm, language = "en" }: ContentWarningModalProps) {
-  if (!open) return null;
+  const titleId = useId();
 
-  return (
+  useEffect(() => {
+    if (!open || typeof document === "undefined") {
+      return;
+    }
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [open]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-w-md rounded bg-white p-4 shadow-xl">
-        <h3 className="text-lg font-semibold">{pick(language, "内容警示", "Content Warning")}</h3>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="max-w-md rounded bg-white p-4 shadow-xl"
+      >
+        <h3 id={titleId} className="text-lg font-semibold">
+          {pick(language, "内容警示", "Content Warning")}
+        </h3>
         <p className="mt-2 text-sm leading-6">
           {pick(
             language,
@@ -24,6 +46,7 @@ export function ContentWarningModal({ open, onConfirm, language = "en" }: Conten
           {pick(language, "我已了解，继续查看", "I Understand, Continue")}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

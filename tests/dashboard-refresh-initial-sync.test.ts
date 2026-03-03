@@ -40,13 +40,16 @@ describe("dashboard initial sync refresh", () => {
     });
 
     const service = getDashboardRefreshService();
+    const before = service.getSnapshot();
     const touched = await service.refreshOnce();
 
     expect(touched).toBeGreaterThan(0);
 
     const snapshot = service.getSnapshot();
     expect(snapshot.meta.updated_at).toBe(checkedAt);
-    expect(snapshot.sources.some((item) => item.url === apLiveUrl && item.published_at === checkedAt)).toBe(true);
+    expect(snapshot.sources.filter((item) => item.url === apLiveUrl).map((item) => item.published_at)).toEqual(
+      before.sources.filter((item) => item.url === apLiveUrl).map((item) => item.published_at)
+    );
   });
 
   it("switches AP live source URL when AP navbar points to a newer live page", async () => {
