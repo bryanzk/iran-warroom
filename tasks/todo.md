@@ -157,3 +157,55 @@
 - `/api/dashboard` 的 `meta.updated_at` 在来源变更后可推进，且相关区块时间字段联动更新。
 - 探测失败不会导致接口 500，失败来源会被安全跳过并可追踪。
 - `npm test`、`npm run build` 通过后再部署。
+
+---
+
+## 2026-03-03 全站过时过滤 + unknown 后置 + 基础设施证据刷新（一次性交付）
+
+### 任务拆解
+1. 在查询层新增统一 72h 新鲜度判定（服务器当前 UTC 基准）。
+2. 对 events/infrastructure/statements/sources/social/regional/media 启用强制过时过滤（from/to 不豁免）。
+3. 保持 factchecks/faq 不做时间过滤。
+4. 在查询层统一基础设施排序：非 unknown 在前，unknown 在后，同组按 last_updated 倒序。
+5. 更新 seed 元数据与基础设施证据到 2026-03-03 口径，来源采用 AP + GOV.UK/UN，证据不足保持 unknown。
+6. 补齐新增中文文案的英文翻译映射，确保英文界面不回落中文。
+7. 增加/更新测试覆盖：72h 过滤、from/to 强制过滤、unknown 后置。
+8. 执行回归验证：`npm test`、`npm run build`。
+
+### 依赖关系
+- 2/3/4 依赖 1。
+- 6 依赖 5。
+- 7 依赖 1/2/3/4/5/6。
+- 8 依赖全部前置任务。
+
+### 验收标准
+- 超过 72h 的数据不会出现在默认 API 与页面展示中（含 from/to 请求）。
+- 基础设施卡片展示顺序中 unknown 永远后置。
+- 证据不足行业仍可保留 unknown，不会被强制改值。
+- `factchecks/faq` 数据不受时间窗口过滤影响。
+- 英文页面新增文案均有英文映射，不出现新增中文直出。
+- `npm test`、`npm run build` 全部通过。
+
+---
+
+## 2026-03-03 AP Live Updates URL 自动切换适配
+
+### 任务拆解
+1. 在来源探测层新增 AP live 页面候选 URL 解析能力（从 HTML 中提取并择优）。
+2. 新增 AP live URL 解析接口，支持从当前 AP live 页面解析“最新 live updates URL”。
+3. 在 dashboard refresh 流程前置 URL 纠偏：发现新 URL 后，将快照内旧 AP live URL 统一切换到新 URL。
+4. 切换 URL 时同步更新相关时间戳与 meta 字段，保证联动刷新链路完整。
+5. 增加测试覆盖：解析逻辑、快照 URL 替换、refresh 集成路径。
+6. 执行验证：定向测试、全量测试、构建。
+
+### 依赖关系
+- 2 依赖 1。
+- 3/4 依赖 2。
+- 5 依赖 1/2/3/4。
+- 6 依赖全部前置任务。
+
+### 验收标准
+- AP 导航中的 live updates 链接切换后，系统可在 refresh 中自动切换到新 URL。
+- 切换后 `sources/events/infrastructure/...` 中关联的旧 URL 会更新为新 URL。
+- 旧 URL 不再作为主追踪目标，后续轮询基于新 URL 生效。
+- `npm test` 与 `npm run build` 全部通过。

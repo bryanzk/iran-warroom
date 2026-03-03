@@ -21,7 +21,7 @@ describe("i18n query layer", () => {
   it("localizes event descriptions in english", () => {
     const events = queryEventsWithLanguage({}, "en");
     expect(events.length).toBeGreaterThan(0);
-    expect(events[0].description).toContain("Credible media");
+    expect(events.some((event) => event.description.includes("Credible media"))).toBe(true);
   });
 
   it("localizes infrastructure evidence in english", () => {

@@ -18,6 +18,24 @@ import type {
   SocialMediaSource
 } from "@/lib/types";
 
+const FRESHNESS_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+function toTimestamp(value: string): number | undefined {
+  const millis = Date.parse(value);
+  return Number.isNaN(millis) ? undefined : millis;
+}
+
+function isFreshWithinWindow(value: string, nowMs: number): boolean {
+  const millis = toTimestamp(value);
+  if (typeof millis !== "number") {
+    return false;
+  }
+  if (millis > nowMs) {
+    return false;
+  }
+  return nowMs - millis <= FRESHNESS_WINDOW_MS;
+}
+
 function withinRange(value: string, from?: string, to?: string): boolean {
   const time = new Date(value).getTime();
   if (Number.isNaN(time)) {
@@ -34,6 +52,7 @@ function withinRange(value: string, from?: string, to?: string): boolean {
 
 export function queryEvents(query: EventQuery): Event[] {
   const data = getSeedData().events;
+  const nowMs = Date.now();
 
   const from = query.from;
   const to = query.to;
@@ -45,6 +64,10 @@ export function queryEvents(query: EventQuery): Event[] {
     assertValidEvent(event);
 
     if (!isAllowedSourceUrl(event.source_url)) {
+      return false;
+    }
+
+    if (!isFreshWithinWindow(event.source_time, nowMs)) {
       return false;
     }
 
@@ -93,20 +116,45 @@ function localizeEvent(event: Event, lang: Language): Event {
 
 export function queryInfrastructure(region?: string): InfrastructureStatus[] {
   const items = getSeedData().infrastructure;
+  const nowMs = Date.now();
   const sanitizedRegion = region ? sanitizeQueryText(region).toLowerCase() : undefined;
 
-  return items.filter((item) => {
-    assertValidInfrastructure(item);
+  const filtered = items
+    .map((item) => {
+      assertValidInfrastructure(item);
 
-    if (!item.evidence.every((evidence) => isAllowedSourceUrl(evidence.source_url))) {
-      return false;
+      if (!isFreshWithinWindow(item.last_updated, nowMs)) {
+        return null;
+      }
+
+      const evidence = item.evidence.filter(
+        (row) => isAllowedSourceUrl(row.source_url) && isFreshWithinWindow(row.source_time, nowMs)
+      );
+      if (evidence.length === 0) {
+        return null;
+      }
+
+      if (
+        sanitizedRegion &&
+        !evidence.some((row) => (row.note || "").toLowerCase().includes(sanitizedRegion))
+      ) {
+        return null;
+      }
+
+      return {
+        ...item,
+        evidence
+      };
+    })
+    .filter((item): item is InfrastructureStatus => item !== null);
+
+  return filtered.sort((a, b) => {
+    const aUnknown = a.status === "unknown";
+    const bUnknown = b.status === "unknown";
+    if (aUnknown !== bUnknown) {
+      return aUnknown ? 1 : -1;
     }
-
-    if (!sanitizedRegion) {
-      return true;
-    }
-
-    return item.evidence.some((evidence) => (evidence.note || "").toLowerCase().includes(sanitizedRegion));
+    return b.last_updated.localeCompare(a.last_updated);
   });
 }
 
@@ -126,12 +174,17 @@ export function queryStatements(params: {
   from?: string;
   to?: string;
 }): Statement[] {
+  const nowMs = Date.now();
   const partyFilter = params.party ? sanitizeQueryText(params.party).toLowerCase() : undefined;
 
   return getSeedData().statements.filter((statement) => {
     assertValidStatement(statement);
 
     if (!isAllowedSourceUrl(statement.source_url)) {
+      return false;
+    }
+
+    if (!isFreshWithinWindow(statement.timestamp, nowMs)) {
       return false;
     }
 
@@ -172,17 +225,24 @@ function localizeFactCheck(item: FactCheckItem, lang: Language): FactCheckItem {
 }
 
 export function querySources(): Array<{ id: string; publisher: string; title: string; url: string; published_at: string }> {
-  return getSeedData().sources.filter((source) => isAllowedSourceUrl(source.url));
+  const nowMs = Date.now();
+  return getSeedData().sources.filter(
+    (source) => isAllowedSourceUrl(source.url) && isFreshWithinWindow(source.published_at, nowMs)
+  );
 }
 
 export function querySocialMediaSources(): SocialMediaSource[] {
+  const nowMs = Date.now();
   return getSeedData().social_media
     .map((source) => ({
       ...source,
       url: source.url || source.source_url || "",
       source_url: source.source_url || source.url
     }))
-    .filter((source) => isAllowedSocialSourceUrl(source.url));
+    .filter(
+      (source) =>
+        isAllowedSocialSourceUrl(source.url) && isFreshWithinWindow(source.published_at, nowMs)
+    );
 }
 
 function localizeSource(source: { id: string; publisher: string; title: string; url: string; published_at: string }, lang: Language) {
@@ -282,9 +342,21 @@ function localizeFaq(items: SeedData["faq"], lang: Language): SeedData["faq"] {
   }));
 }
 
+function queryRegionalImpacts(): SeedData["regional_impacts"] {
+  const nowMs = Date.now();
+  return getSeedData().regional_impacts.filter((impact) => isFreshWithinWindow(impact.source_time, nowMs));
+}
+
+function queryMedia(): SeedData["media"] {
+  const nowMs = Date.now();
+  return getSeedData().media.filter((item) => isFreshWithinWindow(item.source_time, nowMs));
+}
+
 export function queryDashboardWithLanguage(lang: Language): SeedData {
   const seed = getSeedData();
   const meta = getMetaWithLanguage(lang);
+  const regionalImpacts = queryRegionalImpacts();
+  const media = queryMedia();
 
   return {
     ...seed,
@@ -302,8 +374,8 @@ export function queryDashboardWithLanguage(lang: Language): SeedData {
     factchecks: queryFactChecksWithLanguage(lang),
     sources: querySourcesWithLanguage(lang),
     social_media: querySocialMediaSourcesWithLanguage(lang),
-    regional_impacts: localizeRegionalImpacts(seed.regional_impacts, lang),
-    media: localizeMedia(seed.media, lang),
+    regional_impacts: localizeRegionalImpacts(regionalImpacts, lang),
+    media: localizeMedia(media, lang),
     faq: localizeFaq(seed.faq, lang)
   };
 }

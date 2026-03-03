@@ -1,5 +1,5 @@
 import seed from "@/data/seed.json";
-import { hasVersionChanged, probeSourceVersion } from "@/lib/source-probe";
+import { hasVersionChanged, probeSourceVersion, resolveApLiveUpdatesUrl } from "@/lib/source-probe";
 import type { SeedData } from "@/lib/types";
 
 const DASHBOARD_REFRESH_INTERVAL_MS = 60_000;
@@ -91,6 +91,105 @@ export function applySourceUpdateToSnapshot(
   return touched;
 }
 
+export function switchSourceUrlInSnapshot(
+  snapshot: SeedData,
+  fromUrl: string,
+  toUrl: string,
+  observedAt: string
+): number {
+  if (!fromUrl || !toUrl || fromUrl === toUrl) {
+    return 0;
+  }
+  let touched = 0;
+
+  snapshot.sources.forEach((item) => {
+    if (item.url === fromUrl) {
+      item.url = toUrl;
+      item.published_at = observedAt;
+      touched += 1;
+    }
+  });
+
+  snapshot.social_media.forEach((item) => {
+    if (item.url === fromUrl) {
+      item.url = toUrl;
+      item.published_at = observedAt;
+      touched += 1;
+    }
+    if (item.source_url === fromUrl) {
+      item.source_url = toUrl;
+      item.published_at = observedAt;
+      touched += 1;
+    }
+  });
+
+  snapshot.events.forEach((item) => {
+    if (item.source_url === fromUrl) {
+      item.source_url = toUrl;
+      item.source_time = observedAt;
+      touched += 1;
+    }
+  });
+
+  snapshot.infrastructure.forEach((item) => {
+    let evidenceTouched = false;
+    item.evidence.forEach((evidence) => {
+      if (evidence.source_url === fromUrl) {
+        evidence.source_url = toUrl;
+        evidence.source_time = observedAt;
+        evidenceTouched = true;
+        touched += 1;
+      }
+    });
+    if (evidenceTouched) {
+      item.last_updated = observedAt;
+      touched += 1;
+    }
+  });
+
+  snapshot.statements.forEach((item) => {
+    if (item.source_url === fromUrl) {
+      item.source_url = toUrl;
+      item.timestamp = observedAt;
+      touched += 1;
+    }
+  });
+
+  snapshot.factchecks.forEach((item) => {
+    item.sources.forEach((source) => {
+      if (source.source_url === fromUrl) {
+        source.source_url = toUrl;
+        source.source_time = observedAt;
+        touched += 1;
+      }
+    });
+  });
+
+  snapshot.regional_impacts.forEach((item) => {
+    if (item.source_url === fromUrl) {
+      item.source_url = toUrl;
+      item.source_time = observedAt;
+      touched += 1;
+    }
+  });
+
+  snapshot.media.forEach((item) => {
+    if (item.source_url === fromUrl) {
+      item.source_url = toUrl;
+      item.source_time = observedAt;
+      touched += 1;
+    }
+  });
+
+  if (touched > 0) {
+    snapshot.meta.updated_at = observedAt;
+    snapshot.meta.last_successful_snapshot = observedAt;
+    snapshot.meta.coverage_end = observedAt;
+  }
+
+  return touched;
+}
+
 interface TrackedSource {
   url: string;
   baselineVersion?: string;
@@ -147,6 +246,38 @@ function collectTrackedSourceUrls(snapshot: SeedData): TrackedSource[] {
   }));
 }
 
+function findAnyApLiveUrl(snapshot: SeedData): string | undefined {
+  const isApLive = (value?: string): value is string =>
+    typeof value === "string" && value.includes("apnews.com/live/");
+
+  for (const item of snapshot.sources) {
+    if (isApLive(item.url)) return item.url;
+  }
+  for (const item of snapshot.events) {
+    if (isApLive(item.source_url)) return item.source_url;
+  }
+  for (const item of snapshot.infrastructure) {
+    for (const evidence of item.evidence) {
+      if (isApLive(evidence.source_url)) return evidence.source_url;
+    }
+  }
+  for (const item of snapshot.statements) {
+    if (isApLive(item.source_url)) return item.source_url;
+  }
+  for (const item of snapshot.factchecks) {
+    for (const source of item.sources) {
+      if (isApLive(source.source_url)) return source.source_url;
+    }
+  }
+  for (const item of snapshot.regional_impacts) {
+    if (isApLive(item.source_url)) return item.source_url;
+  }
+  for (const item of snapshot.media) {
+    if (isApLive(item.source_url)) return item.source_url;
+  }
+  return undefined;
+}
+
 class DashboardRefreshService {
   private snapshot = cloneSeedData(seed as SeedData);
   private sourceVersions = new Map<string, string>();
@@ -182,6 +313,19 @@ class DashboardRefreshService {
     this.lastRefreshAt = now;
     let touched = 0;
     try {
+      const apLiveUrl = findAnyApLiveUrl(this.snapshot);
+      if (apLiveUrl) {
+        const resolution = await resolveApLiveUpdatesUrl(apLiveUrl);
+        if (resolution.url && resolution.url !== apLiveUrl) {
+          touched += switchSourceUrlInSnapshot(this.snapshot, apLiveUrl, resolution.url, resolution.checkedAt);
+          const oldVersion = this.sourceVersions.get(apLiveUrl);
+          if (oldVersion) {
+            this.sourceVersions.set(resolution.url, oldVersion);
+          }
+          this.sourceVersions.delete(apLiveUrl);
+        }
+      }
+
       const trackedSources = collectTrackedSourceUrls(this.snapshot);
       const probes = await Promise.all(
         trackedSources.map(async (source) => ({
