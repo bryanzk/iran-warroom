@@ -185,3 +185,27 @@
 - `factchecks/faq` 数据不受时间窗口过滤影响。
 - 英文页面新增文案均有英文映射，不出现新增中文直出。
 - `npm test`、`npm run build` 全部通过。
+
+---
+
+## 2026-03-03 AP Live Updates URL 自动切换适配
+
+### 任务拆解
+1. 在来源探测层新增 AP live 页面候选 URL 解析能力（从 HTML 中提取并择优）。
+2. 新增 AP live URL 解析接口，支持从当前 AP live 页面解析“最新 live updates URL”。
+3. 在 dashboard refresh 流程前置 URL 纠偏：发现新 URL 后，将快照内旧 AP live URL 统一切换到新 URL。
+4. 切换 URL 时同步更新相关时间戳与 meta 字段，保证联动刷新链路完整。
+5. 增加测试覆盖：解析逻辑、快照 URL 替换、refresh 集成路径。
+6. 执行验证：定向测试、全量测试、构建。
+
+### 依赖关系
+- 2 依赖 1。
+- 3/4 依赖 2。
+- 5 依赖 1/2/3/4。
+- 6 依赖全部前置任务。
+
+### 验收标准
+- AP 导航中的 live updates 链接切换后，系统可在 refresh 中自动切换到新 URL。
+- 切换后 `sources/events/infrastructure/...` 中关联的旧 URL 会更新为新 URL。
+- 旧 URL 不再作为主追踪目标，后续轮询基于新 URL 生效。
+- `npm test` 与 `npm run build` 全部通过。

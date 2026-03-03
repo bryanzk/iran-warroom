@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import seed from "@/data/seed.json";
-import { applySourceUpdateToSnapshot } from "@/lib/dashboard-refresh";
+import { applySourceUpdateToSnapshot, switchSourceUrlInSnapshot } from "@/lib/dashboard-refresh";
 import type { SeedData } from "@/lib/types";
 
 function cloneSeed(): SeedData {
@@ -54,5 +54,21 @@ describe("dashboard refresh", () => {
 
     expect(touched).toBe(0);
     expect(snapshot).toEqual(before);
+  });
+
+  it("replaces source url across linked sections when AP live updates URL rotates", () => {
+    const snapshot = cloneSeed();
+    const observedAt = "2026-03-03T19:40:00Z";
+    const oldUrl = "https://apnews.com/live/live-updates-israel-iran-february-28-2026";
+    const newUrl = "https://apnews.com/live/iran-war-israel-trump-03-03-2026";
+
+    const touched = switchSourceUrlInSnapshot(snapshot, oldUrl, newUrl, observedAt);
+
+    expect(touched).toBeGreaterThan(0);
+    expect(snapshot.sources.some((item) => item.url === newUrl)).toBe(true);
+    expect(snapshot.sources.some((item) => item.url === oldUrl)).toBe(false);
+    expect(snapshot.events.some((item) => item.source_url === newUrl)).toBe(true);
+    expect(snapshot.infrastructure.some((item) => item.evidence.some((e) => e.source_url === newUrl))).toBe(true);
+    expect(snapshot.meta.updated_at).toBe(observedAt);
   });
 });

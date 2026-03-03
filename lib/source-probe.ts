@@ -5,6 +5,13 @@ export interface SourceProbeResult {
   error?: string;
 }
 
+export interface ApLiveResolutionResult {
+  url?: string;
+  checkedAt: string;
+  status?: number;
+  error?: string;
+}
+
 const PROBE_TIMEOUT_MS = 8_000;
 const PROBE_HEADERS: HeadersInit = {
   "User-Agent":
@@ -53,6 +60,89 @@ export function extractVersionFromHtml(html: string): string | undefined {
   return undefined;
 }
 
+function stripTags(text: string): string {
+  return text
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeApLiveUrl(rawHref: string): string | undefined {
+  try {
+    const normalized = new URL(rawHref, "https://apnews.com").toString();
+    const parsed = new URL(normalized);
+    if (parsed.host !== "apnews.com") {
+      return undefined;
+    }
+    if (!parsed.pathname.startsWith("/live/")) {
+      return undefined;
+    }
+    parsed.hash = "";
+    parsed.search = "";
+    return parsed.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+function parseTrailingDateScore(url: string): number {
+  const match = url.match(/-(\d{2})-(\d{2})-(\d{4})\/?$/);
+  if (!match) {
+    return 0;
+  }
+  const [, month, day, year] = match;
+  const scoreDate = Date.parse(`${year}-${month}-${day}T00:00:00Z`);
+  return Number.isNaN(scoreDate) ? 0 : scoreDate;
+}
+
+export function extractPreferredApLiveUrlFromHtml(html: string): string | undefined {
+  const scored = new Map<string, number>();
+  const push = (url: string, score: number) => {
+    const current = scored.get(url) ?? -Infinity;
+    if (score > current) {
+      scored.set(url, score);
+    }
+  };
+
+  const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+  const canonical = canonicalMatch?.[1] ? normalizeApLiveUrl(canonicalMatch[1]) : undefined;
+  if (canonical) {
+    push(canonical, 150 + parseTrailingDateScore(canonical));
+  }
+
+  const anchorPattern = /<a[^>]+href=['"]([^'"]+)['"][^>]*>([\s\S]*?)<\/a>/gi;
+  let matched: RegExpExecArray | null;
+  while ((matched = anchorPattern.exec(html)) !== null) {
+    const href = normalizeApLiveUrl(matched[1]);
+    if (!href) {
+      continue;
+    }
+
+    const text = stripTags(matched[2]).toLowerCase();
+    let score = 100 + parseTrailingDateScore(href);
+    if (text.includes("live")) {
+      score += 20;
+    }
+    if (text.includes("update")) {
+      score += 40;
+    }
+    if (text.includes("iran")) {
+      score += 40;
+    }
+    if (href.includes("/iran-")) {
+      score += 50;
+    }
+    push(href, score);
+  }
+
+  if (scored.size === 0) {
+    return undefined;
+  }
+
+  return Array.from(scored.entries()).sort((a, b) => b[1] - a[1])[0][0];
+}
+
 function fingerprint(text: string): string {
   let hash = 2166136261;
   for (let i = 0; i < text.length; i += 1) {
@@ -76,6 +166,30 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
     });
   } finally {
     clearTimeout(timer);
+  }
+}
+
+export async function resolveApLiveUpdatesUrl(entryUrl: string): Promise<ApLiveResolutionResult> {
+  const checkedAt = new Date().toISOString();
+  const normalizedEntryUrl = normalizeApLiveUrl(entryUrl);
+  if (!normalizedEntryUrl) {
+    return { checkedAt, error: "not_ap_live_url" };
+  }
+
+  try {
+    const response = await fetchWithTimeout(normalizedEntryUrl, {
+      method: "GET",
+      redirect: "follow",
+      cache: "no-store"
+    });
+    const html = await response.text();
+    return {
+      url: extractPreferredApLiveUrlFromHtml(html),
+      checkedAt,
+      status: response.status
+    };
+  } catch {
+    return { checkedAt, error: "fetch_failed" };
   }
 }
 
