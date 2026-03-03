@@ -13,6 +13,8 @@ export function parseLanguage(raw: string | null | undefined): Language {
 const CONTENT_TRANSLATIONS: Record<string, string> = {
   "截至 2026-02-28 14:32 UTC，多家可信来源报告伊朗境内发生多点空袭与后续响应，航班与通信出现受限迹象，部分信息仍在核验中。":
     "As of 2026-02-28 14:32 UTC, multiple credible sources report multi-point airstrikes and follow-on responses within Iran. Flight and communication constraints are observed, and part of the information remains under verification.",
+  "截至 2026-03-03 15:10 UTC，公开可信来源显示伊朗相关空域与通信仍受限制，部分基础设施状态继续核验。":
+    "As of 2026-03-03 15:10 UTC, credible public sources indicate continuing constraints in Iran-related airspace and communications, while some infrastructure sectors remain under verification.",
   "可信媒体报道德黑兰出现爆炸与烟柱，地点与影响范围仍在持续核验。":
     "Credible media reported explosions and smoke plumes in Tehran. Exact locations and impact scope are still being verified.",
   "区域空域与航线出现临时受限，对伊朗进出港航班造成影响。":
@@ -27,9 +29,19 @@ const CONTENT_TRANSLATIONS: Record<string, string> = {
     "Multiple airlines adjusted routes, affecting Iran-related airspace.",
   "公开来源缺少可核验港口运行状态。":
     "Public sources do not yet provide verifiable port operation status.",
+  "伊朗空域仍受限制，航班运行存在不确定性。":
+    "Iranian airspace remains constrained, and flight operations remain uncertain.",
+  "有航运公司要求波斯湾船舶就地避险，港口运营承压。":
+    "A shipping operator instructed vessels in the Gulf to shelter in place, increasing port operation pressure.",
+  "官方旅行建议提示港口与边境可能临时关闭。":
+    "Official travel advisories warn that ports and borders may close at short notice.",
+  "公开来源仍缺少伊朗境内电网受损的独立交叉证据。":
+    "Public reporting still lacks independent cross-source evidence of grid damage inside Iran.",
   "伊朗境内电力影响尚缺稳定交叉来源。":
     "Reliable cross-source confirmation on domestic power impact in Iran is still lacking.",
   "访问速度下降与服务波动。": "Access speed decreased with service instability.",
+  "英国旅行建议提到伊朗通信受扰、互联网受限。":
+    "UK travel advisories note communications disruption and constrained internet access in Iran.",
   "交通网络以空中运输受限为主。": "Transport disruption is primarily in air traffic.",
   "观察到市场波动，但伊朗本地金融服务运行状态证据不足。":
     "Market volatility is observed, but evidence on domestic financial service operations in Iran remains insufficient.",
