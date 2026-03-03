@@ -49,4 +49,30 @@ describe("live feed refresh", () => {
     expect(messages[0].type).toBe("source_update");
     expect(messages[0].source_url).toBe("https://example.com/source");
   });
+
+  it("localizes update message label in english mode", async () => {
+    vi.mocked(querySources).mockReturnValue([
+      {
+        id: "SM1",
+        publisher: "X",
+        title: "伊朗外交部在社媒发布了针对事件的官方说明。",
+        url: "https://example.com/social-source",
+        published_at: "2026-02-28T06:19:16Z"
+      }
+    ]);
+    vi.mocked(querySocialMediaSources).mockReturnValue([]);
+    vi.mocked(probeSourceVersion).mockResolvedValue({
+      version: "etag:new-version",
+      checkedAt: "2026-03-02T15:50:00Z",
+      status: 200
+    });
+
+    const service = getLiveFeedService();
+    await service.refresh();
+    await service.refresh();
+
+    const [message] = service.getMessages("en", 30);
+    expect(message.text).toContain("The Iranian Ministry of Foreign Affairs posted an official statement on social media regarding the incident.");
+    expect(message.text).not.toContain("伊朗外交部");
+  });
 });

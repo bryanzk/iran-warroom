@@ -1,5 +1,5 @@
 import { querySources, querySocialMediaSources } from "@/lib/query";
-import { pick, type Language } from "@/lib/i18n";
+import { localizeContent, pick, type Language } from "@/lib/i18n";
 import type { LiveMessage, VerificationStatus } from "@/lib/types";
 import { extractVersionFromHtml, hasVersionChanged, probeSourceVersion } from "@/lib/source-probe";
 
@@ -71,14 +71,16 @@ class LiveFeedService {
         id: source.id,
         url: source.url,
         platform: source.publisher,
-        label: source.title,
+        label_zh: localizeContent(source.title, "zh"),
+        label_en: localizeContent(source.title, "en"),
         baselineVersion: source.published_at
       })),
       ...querySocialMediaSources().map((source) => ({
         id: source.id,
         url: source.url,
         platform: source.platform,
-        label: source.title,
+        label_zh: localizeContent(source.title, "zh"),
+        label_en: localizeContent(source.title, "en"),
         baselineVersion: source.published_at
       }))
     ];
@@ -105,14 +107,15 @@ class LiveFeedService {
         }
         this.sourceVersions.set(source.url, probe.version);
         const platformLabel = source.platform ? ` [${source.platform}]` : "";
-        const sourceLabel = source.label ? ` — ${source.label}` : "";
+        const sourceLabelZh = source.label_zh ? ` — ${source.label_zh}` : "";
+        const sourceLabelEn = source.label_en ? ` — ${source.label_en}` : "";
         this.pushMessage({
           source_id: `${source.id}${platformLabel}`,
           source_url: source.url,
           type: "source_update",
           verification_status: "verified",
-          text_zh: `来源 ${source.id}${platformLabel}${sourceLabel} 检测到内容更新。`,
-          text_en: `${source.id}${platformLabel}${sourceLabel} published new content.`
+          text_zh: `来源 ${source.id}${platformLabel}${sourceLabelZh} 检测到内容更新。`,
+          text_en: `${source.id}${platformLabel}${sourceLabelEn} published new content.`
         });
       })
     );
