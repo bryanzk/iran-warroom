@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Broadcast, ClockCountdown, MapPin, Pulse, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
 import { FilterBar } from "@/components/FilterBar";
 import { RealtimeTicker } from "@/components/RealtimeTicker";
@@ -32,10 +32,7 @@ function averageConfidence(events: Event[]): string {
   return avg.toFixed(2);
 }
 
-function formatUpdatedAt(
-  value: string | undefined,
-  _language: Language
-): string {
+function formatUtcStamp(value: string | undefined): string {
   if (!value) {
     return "N/A";
   }
@@ -44,6 +41,25 @@ function formatUpdatedAt(
     return value;
   }
   return `${date.toISOString().slice(0, 19)} UTC`;
+}
+
+function formatCoverageWindow(start: string | undefined, end: string | undefined): string {
+  if (!start || !end) {
+    return "N/A";
+  }
+
+  return `${formatUtcStamp(start)} → ${formatUtcStamp(end)}`;
+}
+
+function formatFreshnessAge(ageHours: number): string {
+  if (ageHours < 1) {
+    return `${Math.max(1, Math.round(ageHours * 60))}m`;
+  }
+  if (ageHours < 24) {
+    return `${Math.round(ageHours)}h`;
+  }
+  const days = ageHours / 24;
+  return `${days >= 10 ? days.toFixed(0) : days.toFixed(1)}d`;
 }
 
 function toSafeHttpUrl(value: string | undefined): string | undefined {
@@ -65,6 +81,8 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
   const [dashboardData, setDashboardData] = useState<SeedData>(data);
   const [language, setLanguage] = useState<Language>("en");
   const [darkMode, setDarkMode] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>(data.events[0]?.id);
   const [syncState, setSyncState] = useState<"syncing" | "live" | "error">("syncing");
   const [drawer, setDrawer] = useState<{ open: boolean; title: string; sources: InfrastructureStatus["evidence"] }>({
@@ -76,6 +94,20 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "test") {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setNowMs(Date.now());
+    }, 60_000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "test") {
@@ -196,91 +228,203 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
     };
   }, [events]);
 
+  const freshness = useMemo(() => {
+    const updatedAt = Date.parse(dashboardData.meta.updated_at);
+    if (Number.isNaN(updatedAt)) {
+      return {
+        tone: "neutral" as const,
+        label: pick(language, "新鲜度未知", "Freshness unavailable"),
+        detail: pick(language, "无法解析更新时间", "Updated timestamp could not be parsed")
+      };
+    }
+
+    const ageHours = Math.max(0, (nowMs - updatedAt) / 3_600_000);
+    const isStale = ageHours > 72;
+    const ageLabel = formatFreshnessAge(ageHours);
+
+    return {
+      tone: isStale ? ("stale" as const) : ("fresh" as const),
+      label: isStale ? pick(language, "已过期", "Stale") : pick(language, "新鲜", "Fresh"),
+      detail: isStale
+        ? pick(language, `${ageLabel}，超出 72 小时新鲜度窗口`, `${ageLabel} old, beyond the 72h freshness window`)
+        : pick(language, `${ageLabel}，仍在 72 小时新鲜度窗口内`, `${ageLabel} old, still within the 72h freshness window`)
+    };
+  }, [dashboardData.meta.updated_at, language, nowMs]);
+
+  const shellStats = [
+    {
+      label: pick(language, "更新于", "Updated"),
+      value: formatUtcStamp(dashboardData.meta.updated_at),
+      tone: "accent"
+    },
+    {
+      label: pick(language, "最近成功快照", "Last successful snapshot"),
+      value: formatUtcStamp(dashboardData.meta.last_successful_snapshot),
+      tone: "calm"
+    },
+    {
+      label: pick(language, "覆盖起点", "Coverage start"),
+      value: formatUtcStamp(dashboardData.meta.coverage_start),
+      tone: "neutral"
+    },
+    {
+      label: pick(language, "覆盖终点", "Coverage end"),
+      value: formatUtcStamp(dashboardData.meta.coverage_end),
+      tone: "neutral"
+    }
+  ] as const;
+
+  const quickOverview = [
+    {
+      label: pick(language, "来源", "Sources"),
+      value: dashboardData.sources.length,
+      detail: pick(language, "已对齐可信来源", "Trusted sources aligned")
+    },
+    {
+      label: pick(language, "事件", "Events"),
+      value: events.length,
+      detail: pick(language, "按筛选结果统计", "Count after filters")
+    },
+    {
+      label: pick(language, "基础设施", "Infrastructure"),
+      value: dashboardData.infrastructure.length,
+      detail: pick(language, "受影响部门视图", "Sector-level view")
+    },
+    {
+      label: pick(language, "核验分布", "Verification mix"),
+      value: `${metrics.verified}/${metrics.contested}/${metrics.unverified}`,
+      detail: pick(language, "已核验 / 争议 / 未验证", "Verified / contested / unverified")
+    }
+  ] as const;
+
   const containerVariants = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.07 } }
+    show: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.07 } }
   };
   const itemVariants = {
     hidden: { opacity: 0, y: 18 },
-    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 20 } }
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: prefersReducedMotion ? { duration: 0 } : { type: "spring" as const, stiffness: 100, damping: 20 }
+    }
   };
 
   return (
-    <main>
-      <div className="mx-auto max-w-[1400px] px-4 py-4 md:py-6">
+    <main className="dashboard-scene">
+      <div className="mx-auto max-w-[1480px] px-4 py-4 md:py-6">
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
+          animate={prefersReducedMotion ? false : { opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-3 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+          className="tone-strip mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-xs"
         >
-          <span className="font-semibold tracking-wide">
+          <span className="font-semibold tracking-[0.12em] uppercase">
             {pick(language, "开源情报追踪 · 伊朗冲突态势", "Open-Source Intelligence · Iran Conflict Watch")}
           </span>
-          <span className="opacity-40">|</span>
-          <span className="opacity-75">
+          <span className="hidden h-4 w-px bg-current/20 md:block" />
+          <span className="max-w-[72ch] text-[11px] opacity-80">
             {pick(language, "实时聚合公开来源数据，不代表任何官方立场", "Aggregates public sources in real time. Does not represent any official position.")}
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-current/10 bg-white/40 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] dark:bg-black/10">
+            <span className="live-dot" />
+            {syncState === "live"
+              ? pick(language, "同步活跃", "Live")
+              : syncState === "syncing"
+                ? pick(language, "同步中", "Syncing")
+                : pick(language, "降级模式", "Degraded")}
+          </span>
+          <span className={`freshness-banner freshness-banner-${freshness.tone}`}>
+            <span className="freshness-banner-label">{pick(language, "新鲜度状态", "Freshness state")}</span>
+            <strong className="freshness-banner-value">{freshness.label}</strong>
+            <span className="freshness-banner-detail">{freshness.detail}</span>
           </span>
         </motion.div>
 
-        <div className="cockpit-shell overflow-hidden p-3 md:p-4">
-          <header className="signal-line pb-4">
-            <div className="grid gap-4 md:grid-cols-[1.45fr_1fr]">
-              <div>
-                <div className="mb-2 flex items-center gap-2 text-xs text-slate-600">
-                  <span className="live-dot" />
-                  <span className="font-semibold tracking-[0.08em] uppercase">
-                    {pick(language, "实时监测窗口", "Live Monitoring Window")}
-                  </span>
-                  <span className="font-mono">{formatUpdatedAt(dashboardData.meta.updated_at, language)}</span>
-                  <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
-                    {syncState === "live"
-                      ? pick(language, "自动刷新", "Auto Refresh")
-                      : syncState === "syncing"
-                        ? pick(language, "同步中", "Syncing")
-                        : pick(language, "降级模式", "Degraded")}
-                  </span>
+        <div className="board-shell overflow-hidden p-3 md:p-4">
+          <header className="board-hero signal-line pb-4">
+            <div className="grid gap-4 xl:grid-cols-[1.25fr_0.95fr]">
+              <div className="space-y-4">
+                <div className="hero-eyebrow">
+                  <span className="hero-eyebrow-tag">{pick(language, "情报简报", "Situation Brief")}</span>
+                  <span className="hero-eyebrow-separator" />
+                  <span>{pick(language, "Coverage-led review surface", "Coverage-led review surface")}</span>
                 </div>
 
-                <h1 className="text-4xl font-extrabold leading-none tracking-tighter md:text-5xl">
+                <h1 className="display-font max-w-[14ch] text-[clamp(2.4rem,5vw,4.95rem)] font-semibold leading-[0.92] tracking-[-0.04em] text-balance">
                   {pick(language, "伊朗空袭后态势总览", "Post-Strike Situation Overview: Iran")}
                 </h1>
 
-                <p className="mt-2 max-w-[70ch] text-sm leading-6 text-slate-600">
+                <p className="max-w-[72ch] text-[0.98rem] leading-7 text-[color:var(--muted)] md:text-[1.03rem]">
                   {localizeContent(dashboardData.meta.headline, language)}
                 </p>
+
+                <div className={`freshness-banner freshness-banner-${freshness.tone}`}>
+                  <span className="freshness-banner-label">{pick(language, "刷新健康", "Freshness health")}</span>
+                  <strong className="freshness-banner-value">{freshness.label}</strong>
+                  <span className="freshness-banner-detail">{freshness.detail}</span>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  {shellStats.map((stat) => (
+                    <article key={stat.label} className={`hero-stat hero-stat-${stat.tone}`}>
+                      <span className="hero-stat-label">{stat.label}</span>
+                      <span className="hero-stat-value">{stat.value}</span>
+                    </article>
+                  ))}
+                </div>
               </div>
 
-              <section className="dense-block p-3">
-                <div className="mb-2 flex items-center gap-2 text-xs text-slate-600">
-                  <Pulse size={14} weight="duotone" className="text-teal-700" />
-                  <span className="font-semibold tracking-[0.08em] uppercase">
-                    {pick(language, "关键指标", "Core Metrics")}
-                  </span>
+              <section className="hero-rail">
+                <div className="section-kicker">
+                  <Pulse size={14} weight="duotone" className="text-[color:var(--accent)]" />
+                  {pick(language, "运行状态", "Run State")}
                 </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-                  <div className="signal-line pb-1">
-                    <p className="text-[11px] uppercase tracking-wide text-slate-500">{pick(language, "已核验", "Verified")}</p>
-                    <p className="font-mono text-lg text-emerald-700">{metrics.verified}</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <article className="status-card status-card-highlight">
+                    <span className="status-card-label">{pick(language, "自动刷新", "Auto refresh")}</span>
+                    <span className="status-card-value">{syncState === "live" ? "15s" : "—"}</span>
+                    <span className="status-card-note">
+                      {pick(language, "客户端轮询已启用", "Client polling enabled")}
+                    </span>
+                  </article>
+                  <article className="status-card">
+                    <span className="status-card-label">{pick(language, "平均可信度", "Avg. confidence")}</span>
+                    <span className="status-card-value">{metrics.avgConfidence}</span>
+                    <span className="status-card-note">{pick(language, "当前筛选结果", "Current filtered set")}</span>
+                  </article>
+                </div>
+
+                <div className="coverage-band">
+                  <div className="section-kicker">
+                    <ClockCountdown size={14} weight="duotone" className="text-[color:var(--accent)]" />
+                    {pick(language, "覆盖窗口", "Coverage Window")}
                   </div>
-                  <div className="signal-line pb-1">
-                    <p className="text-[11px] uppercase tracking-wide text-slate-500">{pick(language, "争议", "Contested")}</p>
-                    <p className="font-mono text-lg text-amber-700">{metrics.contested}</p>
+                  <div className="coverage-band-row">
+                    <div>
+                      <span className="coverage-label">{pick(language, "起点", "Start")}</span>
+                      <strong className="coverage-value">{formatUtcStamp(dashboardData.meta.coverage_start)}</strong>
+                    </div>
+                    <div>
+                      <span className="coverage-label">{pick(language, "终点", "End")}</span>
+                      <strong className="coverage-value">{formatUtcStamp(dashboardData.meta.coverage_end)}</strong>
+                    </div>
                   </div>
-                  <div className="pt-1">
-                    <p className="text-[11px] uppercase tracking-wide text-slate-500">{pick(language, "未验证", "Unverified")}</p>
-                    <p className="font-mono text-lg text-rose-700">{metrics.unverified}</p>
-                  </div>
-                  <div className="pt-1">
-                    <p className="text-[11px] uppercase tracking-wide text-slate-500">{pick(language, "平均可信度", "Avg. Confidence")}</p>
-                    <p className="font-mono text-lg text-slate-700">{metrics.avgConfidence}</p>
-                  </div>
+                  <p className="coverage-footnote">{formatCoverageWindow(dashboardData.meta.coverage_start, dashboardData.meta.coverage_end)}</p>
                 </div>
               </section>
             </div>
-          </header>
 
-          <RealtimeTicker events={events} language={language} />
+            <div className="overview-band mt-4">
+              {quickOverview.map((item) => (
+                <article key={item.label} className="overview-card">
+                  <span className="overview-card-label">{item.label}</span>
+                  <span className="overview-card-value">{item.value}</span>
+                  <span className="overview-card-detail">{item.detail}</span>
+                </article>
+              ))}
+            </div>
+          </header>
 
           <div className="pt-3">
             <FilterBar
@@ -296,11 +440,15 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
           <motion.div
             className="mt-4 space-y-4"
             variants={containerVariants}
-            initial="hidden"
-            animate="show"
+            initial={prefersReducedMotion ? false : "hidden"}
+            animate={prefersReducedMotion ? false : "show"}
           >
             <motion.section variants={itemVariants} className="grid gap-4 xl:grid-cols-[1.34fr_1.18fr] 2xl:grid-cols-[1.22fr_1.28fr]">
               <section className="space-y-4 xl:pr-1">
+                <div className="section-kicker">
+                  <span className="section-kicker-line" />
+                  {pick(language, "主工作区", "Primary Workbench")}
+                </div>
                 <section className="dense-block p-3">
                   <div className="mb-2 grid gap-2 md:grid-cols-3">
                     <article className="signal-line pb-2 md:pb-0 md:pr-2">
@@ -336,6 +484,11 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                 </section>
 
                 <section className="grid gap-4 2xl:grid-cols-[1.25fr_1fr]">
+                  <div className="space-y-4">
+                    <div className="section-kicker">
+                      <span className="section-kicker-line" />
+                      {pick(language, "时间序列", "Chronology")}
+                    </div>
                   <Timeline
                     events={timelineEvents}
                     selectedEventId={selectedEvent?.id}
@@ -344,6 +497,7 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
                     lastUpdatedAt={dashboardData.meta.updated_at}
                     language={language}
                   />
+                  </div>
                   <StatusCards
                     items={dashboardData.infrastructure}
                     language={language}
@@ -359,6 +513,10 @@ export function IncidentDashboard({ data }: IncidentDashboardProps) {
               </section>
 
               <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+                <div className="section-kicker">
+                  <span className="section-kicker-line" />
+                  {pick(language, "信号侧栏", "Signal Stack")}
+                </div>
                 <LiveUpdatePanel language={language} />
 
                 <section className="grid gap-4 2xl:grid-cols-2">
