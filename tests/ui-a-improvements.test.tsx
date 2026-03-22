@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
+import { IncidentDashboard } from "@/components/IncidentDashboard";
 import { RealtimeTicker } from "@/components/RealtimeTicker";
 import { SourceDrawer } from "@/components/SourceDrawer";
 import { MediaGallery } from "@/components/MediaGallery";
+import { getSeedData } from "@/lib/data";
 import type { Event, MediaItem } from "@/lib/types";
 
 const SAMPLE_EVENT: Event = {
@@ -37,6 +39,25 @@ const SAMPLE_MEDIA: MediaItem = {
 };
 
 describe("A-plan ui improvements", () => {
+  it("surfaces the dashboard shell coverage and sync metadata", () => {
+    const dashboardData = JSON.parse(JSON.stringify(getSeedData())) as ReturnType<typeof getSeedData>;
+    dashboardData.meta.updated_at = "2026-01-01T00:00:00Z";
+    dashboardData.meta.last_successful_snapshot = "2026-01-01T00:00:00Z";
+
+    const { unmount } = render(<IncidentDashboard data={dashboardData} />);
+
+    expect(screen.getByText(/Situation Brief/i)).toBeInTheDocument();
+    expect(screen.getByText(/Coverage Window/i)).toBeInTheDocument();
+    expect(screen.getByText(/Last successful snapshot/i)).toBeInTheDocument();
+    expect(screen.getByText(/Freshness health/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/beyond the 72h freshness window/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Trusted sources aligned/i)).toBeInTheDocument();
+    expect(screen.getByText(/Count after filters/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sector-level view/i)).toBeInTheDocument();
+
+    unmount();
+  });
+
   it("provides pause control for realtime ticker", () => {
     render(<RealtimeTicker events={[SAMPLE_EVENT]} language="en" />);
 
